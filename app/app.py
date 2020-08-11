@@ -107,7 +107,7 @@ def collect_lux_values():
             logger.info("lux reply from rpi {}".format(str(lux)))
             for k,v in lux.items():
                 db_label = "{}_{}".format(label,k)
-	        db.execute_sql(QUERY_LUX_INSERT, (timestamp, db_label, lux), logger)
+                db.execute_sql(QUERY_LUX_INSERT, (timestamp, db_label, lux), logger)
         time.sleep(5)
 
 
