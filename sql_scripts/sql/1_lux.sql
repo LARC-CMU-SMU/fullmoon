@@ -1,7 +1,7 @@
 CREATE TABLE "lux" (
     "timestamp" integer NOT NULL,
     "label" text NOT NULL,
-    "lux" integer NOT NULL,
+    "lux" real NOT NULL,
     "pin" text NOT NULL
 ) WITH (oids = false);
 
