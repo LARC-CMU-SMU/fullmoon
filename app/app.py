@@ -105,7 +105,9 @@ def collect_lux_values():
             timestamp = time.time()
             lux = get_lux_from_device(url)
             logger.info("lux reply from rpi {}".format(str(lux)))
-            #db.execute_sql(QUERY_LUX_INSERT, (timestamp, label, lux), logger)
+            for k,v in lux.items():
+                db_label = "{}_{}".format(label,k)
+	        db.execute_sql(QUERY_LUX_INSERT, (timestamp, db_label, lux), logger)
         time.sleep(5)
 
 
