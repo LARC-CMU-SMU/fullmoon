@@ -33,7 +33,7 @@ DEVICES = {
     'c': {'url': 'http://192.168.1.14:8000/', 'dc_pins': [13, ]},
     'd': {'url': 'http://192.168.1.15:8000/', 'dc_pins': [13, ]},
 }
-QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux) VALUES (%s, %s, %s)"
+QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s, %s)"
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
 
@@ -115,8 +115,7 @@ def collect_lux_values():
             if lux is not None:
                 logger.info("lux reply from rpi {}".format(str(lux)))
                 for k,v in lux.items():
-                    db_label = "{}_{}".format(label,k)
-                    db.execute_sql(QUERY_LUX_INSERT, (timestamp, db_label, v), logger)
+                    db.execute_sql(QUERY_LUX_INSERT, (timestamp, label, v, k), logger)
             else:
                 logger.error("rpi {} with url {} returned None for lux".format(label, url))
         time.sleep(5)

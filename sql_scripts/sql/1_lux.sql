@@ -2,6 +2,7 @@ CREATE TABLE "lux" (
     "timestamp" integer NOT NULL,
     "label" text NOT NULL,
     "lux" integer NOT NULL
+    "pin" text NOT NULL
 ) WITH (oids = false);
 
 CREATE INDEX "lux_timestamp" ON "lux" USING btree ("timestamp");
