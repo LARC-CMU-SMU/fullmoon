@@ -21,11 +21,11 @@ services:
     depends_on:
       - postgre
 
-#  app:
-#    build: ./app
-#    volumes:
-#      - ./docker_mount:/app/docker_mount
-#    restart: always
-#    depends_on:
-#      - postgre
-#
+  app:
+    build: ./app
+    volumes:
+      - ./docker_mount:/app/docker_mount
+    restart: always
+    depends_on:
+      - postgre
+
