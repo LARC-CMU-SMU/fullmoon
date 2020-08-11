@@ -28,8 +28,10 @@ mail_count = 1
 count_reset_time = time.time()
 
 DEVICES = {
-    'a': {'url': 'http://192.168.2.231:8000/', 'dc_pins': [12, ]},
-    'b': {'url': 'http://192.168.2.118:8000/', 'dc_pins': [12, ]}
+    'a': {'url': 'http://192.168.1.11:8000/', 'dc_pins': [13, ]},
+    'b': {'url': 'http://192.168.1.10:8000/', 'dc_pins': [13, ]},
+    'c': {'url': 'http://192.168.1.14:8000/', 'dc_pins': [13, ]},
+    'd': {'url': 'http://192.168.1.15:8000/', 'dc_pins': [13, ]},
 }
 QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux) VALUES (%s, %s, %s)"
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
