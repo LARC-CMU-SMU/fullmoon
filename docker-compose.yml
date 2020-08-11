@@ -11,6 +11,7 @@ services:
       POSTGRES_PASSWORD: fullmoon
       POSTGRES_USER: fullmoon
       POSTGRES_DB: fullmoon
+      POSTGRES_SCHEMA: fullmoon
 
   adminer:
     image: adminer
