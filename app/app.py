@@ -48,26 +48,34 @@ def modify_lux_reply_from_rpi(rpi_lux_reply):
 
 def get_lux_from_device(url):
     logger.info("getting lux for url {}".format(url))
-    res = requests.get(url)
-    hr = -1
-    if res.status_code == 200:
-        rpi_lux_json = modify_lux_reply_from_rpi(res.json())
-        logger.debug(rpi_lux_json)
-    else:
-        logger.error(res.text)
-    return rpi_lux_json
+    try:
+        res = requests.get(url)
+        hr = -1
+        if res.status_code == 200:
+            rpi_lux_json = modify_lux_reply_from_rpi(res.json())
+            logger.debug(rpi_lux_json)
+        else:
+            logger.error(res.text)
+        return rpi_lux_json
+    except Exception as e:
+        logger.error(str(e))
+        return None
 
 
 def get_dc_from_device(url, pin):
     logger.info("getting dc for url {} pin {}".format(url, pin))
-    res = requests.get(url, params={'pin': pin})
-    dc = -1
-    if res.status_code == 200:
-        logger.debug(res.json())
-        dc = res.json().get(str(pin))
-    else:
-        logger.error(res.text)
-    return dc
+    try:
+        res = requests.get(url, params={'pin': pin})
+        dc = -1
+        if res.status_code == 200:
+            logger.debug(res.json())
+            dc = res.json().get(str(pin))
+        else:
+            logger.error(res.text)
+        return dc
+    except Exception as e:
+        logger.error(str(e))
+        return -1
 
 
 def set_dc_in_device(url, pin, dc, freq):
@@ -104,10 +112,13 @@ def collect_lux_values():
             url = DEVICES.get(label).get('url') + 'lux'
             timestamp = time.time()
             lux = get_lux_from_device(url)
-            logger.info("lux reply from rpi {}".format(str(lux)))
-            for k,v in lux.items():
-                db_label = "{}_{}".format(label,k)
-                db.execute_sql(QUERY_LUX_INSERT, (timestamp, db_label, v), logger)
+            if lux is not None:
+                logger.info("lux reply from rpi {}".format(str(lux)))
+                for k,v in lux.items():
+                    db_label = "{}_{}".format(label,k)
+                    db.execute_sql(QUERY_LUX_INSERT, (timestamp, db_label, v), logger)
+            else:
+                logger.error("rpi {} with url {} returned None for lux".format(label, url))
         time.sleep(5)
 
 
