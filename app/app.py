@@ -40,7 +40,7 @@ QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %
 # temp fix before updating rpi to lux library
 def modify_lux_reply_from_rpi(rpi_lux_reply):
     logger.info("modifying rpi lux reply {}".format(str(rpi_lux_reply)))
-    hr = res.json().get('hr')
+    hr = rpi_lux_reply.get('hr')
     if hr is not None:
        return {"tsl_9" :hr}
     return rpi_lux_reply
