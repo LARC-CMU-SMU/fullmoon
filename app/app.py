@@ -37,16 +37,25 @@ QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux) VALUES (%s, %s, %s)"
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
 
+# temp fix before updating rpi to lux library
+def modify_lux_reply_from_rpi(rpi_lux_reply):
+    logger.info("modifying rpi lux reply {}".format(str(rpi_lux_reply)))
+    hr = res.json().get('hr')
+    if hr is not None:
+       return {"tsl_9" :hr}
+    return rpi_lux_reply
+
+
 def get_lux_from_device(url):
     logger.info("getting lux for url {}".format(url))
     res = requests.get(url)
     hr = -1
     if res.status_code == 200:
-        logger.debug(res.json())
-        hr = res.json().get('hr')
+        rpi_lux_json = modify_lux_reply_from_rpi(res.json())
+        logger.debug(rpi_lux_json)
     else:
         logger.error(res.text)
-    return hr
+    return rpi_lux_json
 
 
 def get_dc_from_device(url, pin):
@@ -95,7 +104,8 @@ def collect_lux_values():
             url = DEVICES.get(label).get('url') + 'lux'
             timestamp = time.time()
             lux = get_lux_from_device(url)
-            db.execute_sql(QUERY_LUX_INSERT, (timestamp, label, lux), logger)
+            logger.info("lux reply from rpi {}".format(str(lux)))
+            #db.execute_sql(QUERY_LUX_INSERT, (timestamp, label, lux), logger)
         time.sleep(5)
 
 
