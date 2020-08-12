@@ -1,2 +1,12 @@
 # fullmoon
 interact with teapot server and records data
+
+## Getting started
+1. install docker and docker-compose
+2. clone this repository
+3. run the init.sh
+4. update the config.py as necessary
+4. run docker-compose.yaml
+
+## features
+* periodically collect and stores dc values and lux values from rpi devices running teapot server
