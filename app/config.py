@@ -15,16 +15,10 @@ postgres = dict(
     port="5432",
 )
 
-mail = dict(
-    sender="sender email",
-    recipients=["recipient1 email","recipient2 email"],
-    smtp_server="smtp.smu.edu.sg",
-    port=25,
-)
-
 general = dict(
-    sleep_time=5,
-    log_file_name="docker_mount/logs/alerts.log",
+    collect_lux_thread_sleep_time=5,  # seconds
+    collect_dc_thread_sleep_time=5,  # seconds
+    log_file_name="docker_mount/logs/app.log",
     log_level=log_levels["debug"],
     max_log_size=1024 ** 3,  # 1GB
     max_log_file_count=3,
@@ -32,3 +26,9 @@ general = dict(
     mails_per_day=10,
 )
 
+DEVICES = {
+    'a': {'url': 'http://192.168.1.11:8000/', 'dc_pins': [13, ]},
+    'b': {'url': 'http://192.168.1.10:8000/', 'dc_pins': [13, ]},
+    'c': {'url': 'http://192.168.1.14:8000/', 'dc_pins': [13, ]},
+    'd': {'url': 'http://192.168.1.15:8000/', 'dc_pins': [13, ]},
+}
