@@ -28,6 +28,8 @@ logger.addHandler(handler)
 QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s, %s)"
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
+SERVICE_NAME = "RECORD"
+
 
 # temp fix before updating rpi to lux library
 def modify_lux_reply_from_rpi(rpi_lux_reply):
@@ -69,35 +71,35 @@ def get_dc_from_device(url, pin):
         return dc
 
 
-def set_dc_in_device(url, pin, dc, freq):
-    logger.info("setting dc at url {} with pin {} dc {} freq {}".format(url, pin, dc, freq))
-    res = requests.post(url, json={'dc': dc, 'pin': pin, 'freq': freq})
-    try:
-        if res.status_code == 200:
-            return 0
-        else:
-            logger.error(res.text)
-    except Exception as e:
-        logger.error(str(e))
-    return -1
+# def set_dc_in_device(url, pin, dc, freq):
+#     logger.info("setting dc at url {} with pin {} dc {} freq {}".format(url, pin, dc, freq))
+#     res = requests.post(url, json={'dc': dc, 'pin': pin, 'freq': freq})
+#     try:
+#         if res.status_code == 200:
+#             return 0
+#         else:
+#             logger.error(res.text)
+#     except Exception as e:
+#         logger.error(str(e))
+#     return -1
 
 
 def get_time():
     return int(time.time())
 
 
-def update_and_confirm_dc_in_device(label, pin, dc, freq):
-    timestamp = get_time()
-    url = config.DEVICES.get(label).get('url') + 'dc'
-    logger.info("setting dc at url {} with pin {} dc {} freq {} at time {}".format(url, pin, dc, freq, timestamp))
-    ret = set_dc_in_device(url, pin, dc, freq)
-    if ret == 0:
-        ret_dc = get_dc_from_device(url, pin)
-        if dc == ret_dc:
-            db.execute_sql(QUERY_DC_INSERT, (timestamp, label, dc), logger)
-            return 0
-        logger.error("requested dc {} while updated dc {}".format(dc, ret_dc))
-    return -1
+# def update_and_confirm_dc_in_device(label, pin, dc, freq):
+#     timestamp = get_time()
+#     url = config.DEVICES.get(label).get('url') + 'dc'
+#     logger.info("setting dc at url {} with pin {} dc {} freq {} at time {}".format(url, pin, dc, freq, timestamp))
+#     ret = set_dc_in_device(url, pin, dc, freq)
+#     if ret == 0:
+#         ret_dc = get_dc_from_device(url, pin)
+#         if dc == ret_dc:
+#             db.execute_sql(QUERY_DC_INSERT, (timestamp, label, dc), logger)
+#             return 0
+#         logger.error("requested dc {} while updated dc {}".format(dc, ret_dc))
+#     return -1
 
 
 def collect_lux_values():
@@ -134,7 +136,7 @@ def main():
     time.sleep(wait_time_for_db)
     threading.Thread(target=collect_lux_values).start()
     threading.Thread(target=collect_dc_values).start()
-    logger.info("init finished")
+    logger.info("init finished[{}]".format(SERVICE_NAME))
 
 
 if __name__ == '__main__':

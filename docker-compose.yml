@@ -21,8 +21,16 @@ services:
     depends_on:
       - postgre
 
-  app:
-    build: ./app
+#  record:
+#    build: ./record
+#    volumes:
+#      - ./docker_mount:/app/docker_mount
+#    restart: always
+#    depends_on:
+#      - postgre
+
+  control:
+    build: ./control
     volumes:
       - ./docker_mount:/app/docker_mount
     restart: always
