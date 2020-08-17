@@ -8,5 +8,6 @@ interact with teapot server and records data
 4. update the config.py as necessary
 4. run docker-compose.yaml
 
-## features
-* periodically collect and stores dc values and lux values from rpi devices running teapot server
+## services
+* record - periodically collect and stores dc values and lux values from rpi devices running teapot server
+* control - change the led brightness as required
