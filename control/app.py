@@ -30,7 +30,7 @@ QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s,
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
 SERVICE_NAME = "CONTROL"
-COMFORT_VALUE = 30
+COMFORT_DC = 60 * 10000
 DELTA_DC = 2 * 10000
 WEIGHT_MATRIX = None
 OPTIMIZED_DC = None
@@ -106,7 +106,7 @@ def handle_newly_occupied():
             if prev_occupied is not now_occupied:
                 logger.debug("prev {} -> now {}".format(prev_occupied, now_occupied))
                 if now_occupied and not prev_occupied:
-                    set_dc_in_section(section, COMFORT_VALUE)
+                    set_dc_in_section(section, COMFORT_DC)
 
         prev_occupancy_dict = now_occupancy_dict
         sleep_time = config.general.get("handle_newly_occupied_thread_sleep_time")
@@ -117,7 +117,6 @@ def get_calculated_optimized_dc():
     # todo
     # for now it's magic
     return {'a': 290000, 'b': 530000, 'c': 530000, 'd': 200000}
-    # return {'b': 70, }
 
 
 def calculate_optimized_lux_thread():
@@ -139,7 +138,6 @@ def get_current_lux_from_db():
     d = db.execute_sql(query, ('d', 'tsl_9'), logger, True)[0][0]
     logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
-    # return {'b': b, }
 
 
 def get_occupancy_from_db():
@@ -152,7 +150,6 @@ def get_occupancy_from_db():
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
     logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
-    # return {'b': b, }
 
 
 def get_dc_from_db():
@@ -165,7 +162,6 @@ def get_dc_from_db():
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
     logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
-    # return {'b': b, }
 
 
 def set_optimized_dc_in_device():
