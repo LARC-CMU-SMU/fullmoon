@@ -165,9 +165,9 @@ def get_dc_from_db():
 
 def set_optimized_lux_in_device():
     logger.info("starting set_optimized_brightness thread")
-    old_lux_dict = get_current_lux_from_db()
-    dc_dict = get_dc_from_db()
     while 1:
+        old_lux_dict = get_current_lux_from_db()
+        dc_dict = get_dc_from_db()
         for section, old_lux in old_lux_dict.items():
             new_lux = OPTIMIZED_LUX.get(section)
             logger.debug("new lux {}, old lux {} delta {}"
