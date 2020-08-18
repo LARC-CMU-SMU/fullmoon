@@ -41,7 +41,7 @@ def set_dc_in_device(url, pin, dc, freq):
     logger.info("setting dc at url {} with pin {} dc {} freq {}".format(url, pin, dc, freq))
     try:
         res = requests.post(url, json={'dc': dc, 'pin': pin, 'freq': freq})
-        if res.status_code == 200:
+        if res.status_code == 202:
             return 0
         else:
             logger.error(res.text)
