@@ -23,7 +23,7 @@ general = dict(
     mails_per_day=10,
     handle_newly_occupied_thread_sleep_time=1,  # seconds
     calculate_optimized_lux_thread_sleep_time=5,  # seconds
-    set_optimized_lux_in_device_thread_sleep_time=3,  # seconds
+    set_optimized_dc_in_device_thread_sleep_time=3,  # seconds
     wait_between_optimize_and_control=10,
     dc_freq=300,
 )
