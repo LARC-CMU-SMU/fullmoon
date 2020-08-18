@@ -30,8 +30,8 @@ QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s,
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
 SERVICE_NAME = "CONTROL"
-COMFORT_VALUE = 80
-DELTA_LUX = 5
+COMFORT_VALUE = 50
+DELTA_DC = 10
 WEIGHT_MATRIX = None
 OPTIMIZED_LUX = None
 BRIGHTNESS_THRESHOLD = 2
@@ -111,7 +111,7 @@ def handle_newly_occupied():
 def get_calculated_optimized_lux():
     # todo
     # for now it's magic
-    return {'a': 59, 'b': 73, 'c': 73, 'd': 50}
+    return {'a': 29, 'b': 53, 'c': 53, 'd': 20}
 
 
 def calculate_optimized_lux_thread():
@@ -147,26 +147,40 @@ def get_occupancy_from_db():
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
+def get_dc_from_db():
+    # todo : optimize
+    logger.debug("querying the dc from db")
+    query = "SELECT dc FROM dc WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
+    a = db.execute_sql(query, ('a',), logger, True)[0][0]
+    b = db.execute_sql(query, ('b',), logger, True)[0][0]
+    c = db.execute_sql(query, ('c',), logger, True)[0][0]
+    d = db.execute_sql(query, ('d',), logger, True)[0][0]
+    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    return {'a': a, 'b': b, 'c': c, 'd': d}
+
+
 def set_optimized_lux_in_device():
     logger.info("starting set_optimized_brightness thread")
     old_lux_dict = get_current_lux_from_db()
+    dc_dict = get_dc_from_db()
     while 1:
         for section, old_lux in old_lux_dict.items():
             new_lux = OPTIMIZED_LUX.get(section)
             logger.debug("new lux {}, old lux {} delta {}"
-                         .format(new_lux, old_lux, DELTA_LUX))
+                         .format(new_lux, old_lux, DELTA_DC))
             if abs(new_lux - old_lux) > BRIGHTNESS_THRESHOLD:
+                dc = dc_dict.get(section)
                 if new_lux > old_lux:
-                    logger.debug("increasing old lux {} by delta {} towards"
-                                 .format(old_lux, DELTA_LUX, new_lux))
-                    set_lux_in_section(section, old_lux + DELTA_LUX)
+                    logger.debug("old lux {} -> new lux {} old dc {} delta dc +{}"
+                                 .format(old_lux, new_lux, dc, DELTA_DC))
+                    set_lux_in_section(section, dc + DELTA_DC)
                 if new_lux < old_lux:
-                    logger.debug("decreasing old lux {} by delta {} towards"
-                                 .format(old_lux, DELTA_LUX, new_lux))
-                    set_lux_in_section(section, old_lux - DELTA_LUX)
+                    logger.debug("old lux {} -> new lux {} old dc {} delta dc -{}"
+                                 .format(old_lux, new_lux, dc, DELTA_DC))
+                    set_lux_in_section(section, dc - DELTA_DC)
             else:
                 logger.debug("new lux {}, old lux {} delta {}, not doing anything"
-                             .format(new_lux, old_lux, DELTA_LUX))
+                             .format(new_lux, old_lux, DELTA_DC))
 
         sleep_time = config.general.get("set_optimized_lux_in_device_thread_sleep_time")
         time.sleep(sleep_time)
