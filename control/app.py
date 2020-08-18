@@ -35,6 +35,8 @@ DELTA_DC = 2 * 10000
 WEIGHT_MATRIX = None
 OPTIMIZED_DC = None
 DC_THRESHOLD = 2 * 10000
+DC_LOWER_BOUND = 0
+DC_UPPER_BOUND = 100 * 10000
 
 
 def set_dc_in_device(url, pin, dc, freq):
@@ -74,15 +76,18 @@ def init_weight_matrix():
     WEIGHT_MATRIX = get_weight_matrix_from_db()
 
 
-def get_dc_for_lux(lux):
-    # todo
-    logger.info("converting lux {} to dc".format(lux))
-    return int(lux)  # magic
+def validate_dc(dc):
+    logger.info("validating dc {}".format(dc))
+    if dc < DC_LOWER_BOUND:
+        return DC_LOWER_BOUND
+    if dc > DC_UPPER_BOUND:
+        return DC_UPPER_BOUND
+    return int(dc)
 
 
-def set_dc_in_section(section, lux):
-    logger.info("setting lux {} in section {}".format(lux, section))
-    dc = get_dc_for_lux(lux)
+def set_dc_in_section(section, dc):
+    logger.info("setting lux {} in section {}".format(dc, section))
+    dc = validate_dc(dc)
     url = "{}dc".format(config.DEVICES.get(section).get('url'))
     dc_pin = config.DEVICES.get(section).get('dc_pin')
     ret = set_dc_in_device(url, dc_pin, dc, config.general.get("dc_freq"))
