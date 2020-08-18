@@ -31,7 +31,7 @@ QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %
 
 SERVICE_NAME = "CONTROL"
 COMFORT_VALUE = 50
-DELTA_DC = 10
+DELTA_DC = 5 * 10000
 WEIGHT_MATRIX = None
 OPTIMIZED_LUX = None
 BRIGHTNESS_THRESHOLD = 2
@@ -77,7 +77,7 @@ def init_weight_matrix():
 def get_dc_for_lux(lux):
     # todo
     logger.info("converting lux {} to dc".format(lux))
-    return int(lux * 10000)  # magic
+    return int(lux)  # magic
 
 
 def set_lux_in_section(section, lux):
@@ -111,7 +111,8 @@ def handle_newly_occupied():
 def get_calculated_optimized_lux():
     # todo
     # for now it's magic
-    return {'a': 29, 'b': 53, 'c': 53, 'd': 20}
+    # return {'a': 29, 'b': 53, 'c': 53, 'd': 20}
+    return {'b': 70, }
 
 
 def calculate_optimized_lux_thread():
@@ -127,36 +128,39 @@ def get_current_lux_from_db():
     # todo : optimize below code
     logger.debug("querying the lux from db")
     query = "SELECT lux FROM lux WHERE label=%s AND pin=%s ORDER BY timestamp DESC LIMIT 1"
-    a = db.execute_sql(query, ('a', 'tsl_9'), logger, True)[0][0]
+    # a = db.execute_sql(query, ('a', 'tsl_9'), logger, True)[0][0]
     b = db.execute_sql(query, ('b', 'tsl_2'), logger, True)[0][0]
-    c = db.execute_sql(query, ('c', 'tsl_9'), logger, True)[0][0]
-    d = db.execute_sql(query, ('d', 'tsl_9'), logger, True)[0][0]
-    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
-    return {'a': a, 'b': b, 'c': c, 'd': d}
+    # c = db.execute_sql(query, ('c', 'tsl_9'), logger, True)[0][0]
+    # d = db.execute_sql(query, ('d', 'tsl_9'), logger, True)[0][0]
+    # logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    # return {'a': a, 'b': b, 'c': c, 'd': d}
+    return {'b': b, }
 
 
 def get_occupancy_from_db():
     # todo : optimize
     logger.debug("querying the occupancy from db")
     query = "SELECT occupancy FROM occupancy WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
-    a = db.execute_sql(query, ('a',), logger, True)[0][0]
+    # a = db.execute_sql(query, ('a',), logger, True)[0][0]
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
-    c = db.execute_sql(query, ('c',), logger, True)[0][0]
-    d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
-    return {'a': a, 'b': b, 'c': c, 'd': d}
+    # c = db.execute_sql(query, ('c',), logger, True)[0][0]
+    # d = db.execute_sql(query, ('d',), logger, True)[0][0]
+    # logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    # return {'a': a, 'b': b, 'c': c, 'd': d}
+    return {'b': b, }
 
 
 def get_dc_from_db():
     # todo : optimize
     logger.debug("querying the dc from db")
     query = "SELECT dc FROM dc WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
-    a = db.execute_sql(query, ('a',), logger, True)[0][0]
+    # a = db.execute_sql(query, ('a',), logger, True)[0][0]
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
-    c = db.execute_sql(query, ('c',), logger, True)[0][0]
-    d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
-    return {'a': a, 'b': b, 'c': c, 'd': d}
+    # c = db.execute_sql(query, ('c',), logger, True)[0][0]
+    # d = db.execute_sql(query, ('d',), logger, True)[0][0]
+    # logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    # return {'a': a, 'b': b, 'c': c, 'd': d}
+    return {'b': b, }
 
 
 def set_optimized_lux_in_device():
