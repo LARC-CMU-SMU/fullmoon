@@ -30,7 +30,7 @@ QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s,
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
 SERVICE_NAME = "CONTROL"
-COMFORT_VALUE = 30
+COMFORT_VALUE = 80
 DELTA_LUX = 5
 WEIGHT_MATRIX = None
 OPTIMIZED_LUX = None
@@ -61,7 +61,8 @@ def get_occupancy():
     return occupancy
 
 
-def get_weight_matrix():
+def get_weight_matrix_from_db():
+    # todo : implement the actual feature
     return [[.9, .4, .3, .1],
             [.4, .9, .3, .3],
             [.4, .2, .8, .4],
@@ -70,17 +71,17 @@ def get_weight_matrix():
 
 def init_weight_matrix():
     global WEIGHT_MATRIX
-    WEIGHT_MATRIX = get_weight_matrix()
+    WEIGHT_MATRIX = get_weight_matrix_from_db()
 
 
 def get_dc_for_lux(lux):
     logger.info("converting lux {} to dc".format(lux))
-    return lux * .8  # magic
+    return int(lux * .8)  # magic
 
 
 def set_lux_in_section(section, lux):
     logger.info("setting lux {} in section {}".format(lux, section))
-    dc = int(get_dc_for_lux(lux))
+    dc = get_dc_for_lux(lux)
     url = config.DEVICES.get(section).get('url')
     dc_pin = config.DEVICES.get(section).get('dc_pin')
     ret = set_dc_in_device(url, dc_pin, dc, config.general.get("dc_freq"))
@@ -96,9 +97,10 @@ def handle_newly_occupied():
         for section in prev_occupancy_dict.keys():
             prev_occupied = prev_occupancy_dict.get(section)
             now_occupied = now_occupancy_dict.get(section)
-            logger.debug("prev {} -> now {}".format(prev_occupied, now_occupied))
-            if now_occupied and not prev_occupied:
-                set_lux_in_section(section, COMFORT_VALUE)
+            if prev_occupied is not now_occupied:
+                logger.debug("prev {} -> now {}".format(prev_occupied, now_occupied))
+                if now_occupied and not prev_occupied:
+                    set_lux_in_section(section, COMFORT_VALUE)
 
         prev_occupancy_dict = now_occupancy_dict
         sleep_time = config.general.get("handle_newly_occupied_thread_sleep_time")
@@ -106,6 +108,7 @@ def handle_newly_occupied():
 
 
 def get_calculated_optimized_lux():
+    # todo
     # for now it's magic
     return {'a': 59, 'b': 73, 'c': 73, 'd': 50}
 
@@ -132,6 +135,7 @@ def get_current_lux_from_db():
 
 
 def get_occupancy_from_db():
+    # todo : optimize
     logger.info("querying the occupancy from db")
     query = "SELECT occupancy FROM occupancy WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
