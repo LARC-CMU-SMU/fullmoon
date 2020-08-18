@@ -75,8 +75,9 @@ def init_weight_matrix():
 
 
 def get_dc_for_lux(lux):
+    # todo
     logger.info("converting lux {} to dc".format(lux))
-    return int(lux * .8)  # magic
+    return int(lux * 10000)  # magic
 
 
 def set_lux_in_section(section, lux):
