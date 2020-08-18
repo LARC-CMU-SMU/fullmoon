@@ -3,7 +3,7 @@ log_levels = dict(
     error='ERROR',
     warning='WARNING',
     info='INFO',
-    debug='DEBUG'
+    debug='DEBUG',
 )
 
 postgres = dict(
@@ -19,7 +19,7 @@ general = dict(
     collect_lux_thread_sleep_time=5,  # seconds
     collect_dc_thread_sleep_time=5,  # seconds
     log_file_name="docker_mount/logs/record.log",
-    log_level=log_levels["debug"],
+    log_level=log_levels["info"],
     max_log_size=1024 ** 3,  # 1GB
     max_log_file_count=3,
     wait_time_for_db=20,

@@ -3,7 +3,7 @@ log_levels = dict(
     error='ERROR',
     warning='WARNING',
     info='INFO',
-    debug='DEBUG'
+    debug='DEBUG',
 )
 
 postgres = dict(
@@ -21,9 +21,9 @@ general = dict(
     max_log_file_count=3,
     wait_time_for_db=10,
     mails_per_day=10,
-    handle_newly_occupied_thread_sleep_time=10,  # seconds
-    update_optimized_lux_thread_sleep_time=5,  # seconds
-    set_optimized_brightness_thread_sleep_time=5,  # seconds
+    handle_newly_occupied_thread_sleep_time=1,  # seconds
+    calculate_optimized_lux_thread_sleep_time=5,  # seconds
+    set_optimized_lux_in_device_thread_sleep_time=1,  # seconds
     wait_between_optimize_and_control=10,
     dc_freq=300,
 )
