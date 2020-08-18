@@ -82,7 +82,7 @@ def get_dc_for_lux(lux):
 def set_lux_in_section(section, lux):
     logger.info("setting lux {} in section {}".format(lux, section))
     dc = get_dc_for_lux(lux)
-    url = config.DEVICES.get(section).get('url')
+    url = "{}/dc".format(config.DEVICES.get(section).get('url'))
     dc_pin = config.DEVICES.get(section).get('dc_pin')
     ret = set_dc_in_device(url, dc_pin, dc, config.general.get("dc_freq"))
     if ret < 0:
