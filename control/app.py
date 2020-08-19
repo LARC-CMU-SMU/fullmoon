@@ -37,6 +37,8 @@ OPTIMIZED_DC = None
 DC_THRESHOLD = 2 * 10000
 DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
+MIN_LUX = 10
+COMFORT_LUX = 50
 
 
 def set_dc_in_device(url, pin, dc, freq):
@@ -113,10 +115,38 @@ def handle_newly_occupied():
         time.sleep(sleep_time)
 
 
+def get_optimum_lux_vector_for_occupancy_vector(occupancy_vector):
+    optimum_lux_vector = {}
+    for section, occupied in occupancy_vector.items():
+        optimum_lux = MIN_LUX
+        if occupied:
+            optimum_lux = COMFORT_LUX
+        optimum_lux_vector[section] = optimum_lux
+    return optimum_lux_vector
+
+
+def get_deficit_lux_vector(optimum_lux, current_lux):
+    deficit_lux_vector = {}
+    for section in optimum_lux.keys():
+        deficit_lux_vector[section] = optimum_lux[section] - current_lux[section]
+    return deficit_lux_vector
+
+
+def get_dc_vector(deficit_lux_vector, weight_matrix):
+    # todo : use the weight matrix to calculate the correct dc value
+    dc_vector = {}
+    for section, lux_value in deficit_lux_vector.items():
+        dc_vector[section] = lux_value * 10000
+    return dc_vector
+
+
 def get_calculated_optimized_dc():
-    # todo
-    # for now it's magic
-    return {'a': 290000, 'b': 530000, 'c': 530000, 'd': 200000}
+    occupancy_vector = get_occupancy()
+    optimum_lux_vector = get_optimum_lux_vector_for_occupancy_vector(occupancy_vector)
+    current_lux_vector = get_current_lux_from_db()
+    deficit_lux_vector = get_deficit_lux_vector(optimum_lux_vector, current_lux_vector)
+    dc_vector = get_dc_vector(deficit_lux_vector, WEIGHT_MATRIX)
+    return dc_vector
 
 
 def calculate_optimized_lux_thread():
