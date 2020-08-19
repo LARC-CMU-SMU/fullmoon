@@ -59,12 +59,6 @@ def get_time():
     return int(time.time())
 
 
-def get_occupancy():
-    occupancy = get_occupancy_from_db()
-    logger.debug("latest occupancy stat {}".format(occupancy))
-    return occupancy
-
-
 def get_weight_matrix_from_db():
     # todo : implement the actual feature
     return [[.9, .4, .3, .1],
@@ -79,7 +73,7 @@ def init_weight_matrix():
 
 
 def validate_dc(dc):
-    logger.info("validating dc {}".format(dc))
+    logger.debug("validating dc {}".format(dc))
     if dc < DC_LOWER_BOUND:
         return DC_LOWER_BOUND
     if dc > DC_UPPER_BOUND:
@@ -88,7 +82,7 @@ def validate_dc(dc):
 
 
 def set_dc_in_section(section, dc):
-    logger.info("setting lux {} in section {}".format(dc, section))
+    logger.debug("setting lux {} in section {}".format(dc, section))
     dc = validate_dc(dc)
     url = "{}dc".format(config.DEVICES.get(section).get('url'))
     dc_pin = config.DEVICES.get(section).get('dc_pin')
@@ -98,15 +92,15 @@ def set_dc_in_section(section, dc):
 
 
 def handle_newly_occupied():
-    logger.info("starting handle_newly_occupied thread")
-    prev_occupancy_dict = get_occupancy()
+    logger.debug("starting handle_newly_occupied thread")
+    prev_occupancy_dict = get_occupancy_from_db()
     while 1:
-        now_occupancy_dict = get_occupancy()
+        now_occupancy_dict = get_occupancy_from_db()
         for section in prev_occupancy_dict.keys():
             prev_occupied = prev_occupancy_dict.get(section)
             now_occupied = now_occupancy_dict.get(section)
             if prev_occupied is not now_occupied:
-                logger.debug("prev {} -> now {}".format(prev_occupied, now_occupied))
+                logger.info("prev {} -> now {}".format(prev_occupied, now_occupied))
                 if now_occupied and not prev_occupied:
                     set_dc_in_section(section, COMFORT_DC)
 
@@ -141,16 +135,21 @@ def get_dc_vector(deficit_lux_vector, weight_matrix):
 
 
 def get_calculated_optimized_dc():
-    occupancy_vector = get_occupancy()
+    occupancy_vector = get_occupancy_from_db()
+    logger.info("occupancy_vector {}".format(occupancy_vector))
     optimum_lux_vector = get_optimum_lux_vector_for_occupancy_vector(occupancy_vector)
+    logger.info("optimum_lux_vector {}".format(optimum_lux_vector))
     current_lux_vector = get_current_lux_from_db()
+    logger.info("current_lux_vector {}".format(current_lux_vector))
     deficit_lux_vector = get_deficit_lux_vector(optimum_lux_vector, current_lux_vector)
+    logger.info("deficit_lux_vector {}".format(deficit_lux_vector))
     dc_vector = get_dc_vector(deficit_lux_vector, WEIGHT_MATRIX)
+    logger.info("dc_vector {}".format(dc_vector))
     return dc_vector
 
 
 def calculate_optimized_lux_thread():
-    logger.info("starting calculate_optimized_brightness thread")
+    logger.debug("starting calculate_optimized_brightness thread")
     global OPTIMIZED_DC
     while 1:
         OPTIMIZED_DC = get_calculated_optimized_dc()
@@ -166,7 +165,7 @@ def get_current_lux_from_db():
     b = db.execute_sql(query, ('b', 'tsl_2'), logger, True)[0][0]
     c = db.execute_sql(query, ('c', 'tsl_9'), logger, True)[0][0]
     d = db.execute_sql(query, ('d', 'tsl_9'), logger, True)[0][0]
-    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    logger.info("lux :a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
@@ -178,7 +177,7 @@ def get_occupancy_from_db():
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    logger.info("occupancy : a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
@@ -190,12 +189,12 @@ def get_dc_from_db():
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.debug("a {}, b {}, c {}, d {}".format(a, b, c, d))
+    logger.info("dc : a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
 def set_optimized_dc_in_device():
-    logger.info("starting set_optimized_brightness thread")
+    logger.debug("starting set_optimized_brightness thread")
     while 1:
         old_dc_dict = get_dc_from_db()
         for section, old_dc in old_dc_dict.items():
@@ -204,11 +203,11 @@ def set_optimized_dc_in_device():
                          .format(new_dc, old_dc, DELTA_DC))
             if abs(new_dc - old_dc) > DC_THRESHOLD:
                 if new_dc > old_dc:
-                    logger.debug("old dc {} -> new dc {} delta dc +{}"
+                    logger.info("old dc {} -> new dc {} delta dc +{}"
                                  .format(old_dc, new_dc, DELTA_DC))
                     set_dc_in_section(section, old_dc + DELTA_DC)
                 if new_dc < old_dc:
-                    logger.debug("old dc {} -> new dc {} delta dc -{}"
+                    logger.info("old dc {} -> new dc {} delta dc -{}"
                                  .format(old_dc, new_dc, DELTA_DC))
                     set_dc_in_section(section, old_dc - DELTA_DC)
             else:
@@ -227,7 +226,7 @@ def main():
     threading.Thread(target=calculate_optimized_lux_thread).start()
     time.sleep(config.general['wait_between_optimize_and_control'])
     threading.Thread(target=set_optimized_dc_in_device).start()
-    logger.debug("init finished[{}]".format(SERVICE_NAME))
+    logger.info("init finished[{}]".format(SERVICE_NAME))
 
 
 if __name__ == '__main__':
