@@ -21,16 +21,24 @@ services:
     depends_on:
       - postgre
 
-  record:
-    build: ./record
-    volumes:
-      - ./docker_mount:/app/docker_mount
-    restart: always
-    depends_on:
-      - postgre
+#  record:
+#    build: ./record
+#    volumes:
+#      - ./docker_mount:/app/docker_mount
+#    restart: always
+#    depends_on:
+#      - postgre
+#
+#  control:
+#    build: ./control
+#    volumes:
+#      - ./docker_mount:/app/docker_mount
+#    restart: always
+#    depends_on:
+#      - postgre
 
-  control:
-    build: ./control
+  ipcam:
+    build: ./ipcam
     volumes:
       - ./docker_mount:/app/docker_mount
     restart: always

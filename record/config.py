@@ -26,7 +26,7 @@ general = dict(
     mails_per_day=10,
 )
 
-DEVICES = {
+RPI_DEVICES = {
     'a': {'url': 'http://192.168.1.11:8000/', 'dc_pins': [13, ]},
     'b': {'url': 'http://192.168.1.10:8000/', 'dc_pins': [13, ]},
     'c': {'url': 'http://192.168.1.14:8000/', 'dc_pins': [13, ]},

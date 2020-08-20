@@ -71,42 +71,15 @@ def get_dc_from_device(url, pin):
         return dc
 
 
-# def set_dc_in_device(url, pin, dc, freq):
-#     logger.info("setting dc at url {} with pin {} dc {} freq {}".format(url, pin, dc, freq))
-#     res = requests.post(url, json={'dc': dc, 'pin': pin, 'freq': freq})
-#     try:
-#         if res.status_code == 200:
-#             return 0
-#         else:
-#             logger.error(res.text)
-#     except Exception as e:
-#         logger.error(str(e))
-#     return -1
-
-
 def get_time():
     return int(time.time())
 
 
-# def update_and_confirm_dc_in_device(label, pin, dc, freq):
-#     timestamp = get_time()
-#     url = config.DEVICES.get(label).get('url') + 'dc'
-#     logger.info("setting dc at url {} with pin {} dc {} freq {} at time {}".format(url, pin, dc, freq, timestamp))
-#     ret = set_dc_in_device(url, pin, dc, freq)
-#     if ret == 0:
-#         ret_dc = get_dc_from_device(url, pin)
-#         if dc == ret_dc:
-#             db.execute_sql(QUERY_DC_INSERT, (timestamp, label, dc), logger)
-#             return 0
-#         logger.error("requested dc {} while updated dc {}".format(dc, ret_dc))
-#     return -1
-
-
-def collect_lux_values():
-    logger.info("lux collection thread started")
+def collect_lux_values_via_hardware_sensors():
+    logger.info("collect_lux_values_via_hardware_sensors thread started")
     while 1:
-        for label in config.DEVICES.keys():
-            url = config.DEVICES.get(label).get('url') + 'lux'
+        for label in config.RPI_DEVICES.keys():
+            url = config.RPI_DEVICES.get(label).get('url') + 'lux'
             timestamp = time.time()
             lux = get_lux_from_device(url)
             if lux is not None:
@@ -121,10 +94,10 @@ def collect_lux_values():
 def collect_dc_values():
     logger.info("dc collection thread started")
     while 1:
-        for label in config.DEVICES.keys():
-            url = config.DEVICES.get(label).get('url') + 'dc'
+        for label in config.RPI_DEVICES.keys():
+            url = config.RPI_DEVICES.get(label).get('url') + 'dc'
             timestamp = time.time()
-            for pin in config.DEVICES.get(label).get('dc_pins'):
+            for pin in config.RPI_DEVICES.get(label).get('dc_pins'):
                 lux = get_dc_from_device(url, pin)
                 db.execute_sql(QUERY_DC_INSERT, (timestamp, label, pin, lux), logger)
         time.sleep(config.general.get("collect_dc_thread_sleep_time"))
@@ -134,7 +107,7 @@ def main():
     wait_time_for_db = config.general["wait_time_for_db"]
     logger.info("Waiting [%s] seconds for DB to come up", wait_time_for_db)
     time.sleep(wait_time_for_db)
-    threading.Thread(target=collect_lux_values).start()
+    threading.Thread(target=collect_lux_values_via_hardware_sensors).start()
     threading.Thread(target=collect_dc_values).start()
     logger.info("init finished[{}]".format(SERVICE_NAME))
 
