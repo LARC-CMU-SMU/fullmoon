@@ -9,6 +9,6 @@ mkdir -p docker_mount/data/postgre/scripts
 echo "data/postgre/scripts ...done."
 cp -r sql_scripts/* docker_mount/data/postgre/scripts/
 echo "copying sql scripts to postgre scripts ...done"
-mkdir -p docker_mount/data/app
-echo "data/app ...done."
+mkdir -p docker_mount/data/ipcam/images
+echo "data/ipcam/images ...done."
 

@@ -2,8 +2,10 @@ import logging
 import sys
 import threading
 import time
-import cv2
 from logging.handlers import TimedRotatingFileHandler
+from os.path import join
+
+import cv2
 
 import config
 import db
@@ -67,8 +69,12 @@ def handle_ip_cam_thread(label, ip_cam_url):
                 ret, frame = vcap.read()
                 if ret:
                     timestamp = get_time()
-                    lux_values = calculate_lux_values_from_image(calculate_lux_values_from_image(label, frame))
+                    lux_values = calculate_lux_values_from_image(label, frame)
                     write_lux_values_to_db(lux_values, label, timestamp)
+                    if config.general.get("write_image"):
+                        image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, label))
+                        logger.debug("writing image to {}".format(image_path))
+                        cv2.imwrite(image_path, frame)
                 else:
                     logger.warn("read status false for {}, re initiating".format(ip_cam_url))
                     vcap = cv2.VideoCapture(ip_cam_url)
