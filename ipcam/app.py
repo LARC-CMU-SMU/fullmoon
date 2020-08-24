@@ -41,8 +41,12 @@ def write_lux_values_to_db(lux_values, camera_label, timestamp):
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
 
-def get_time():
+def get_time_in_full_seconds():
     return int(time.time())
+
+
+def get_time_in_frac_seconds():
+    return time.time()
 
 
 def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
@@ -75,13 +79,13 @@ def calculate_lux_values_from_image(ip_cam_label, image):
 def handle_ip_cam_thread(label, ip_cam_url):
     logger.debug("starting handle_ip_cam_thread for ip cam {} with url {}".format(label, ip_cam_url))
     while 1:
-        start_time = get_time()
+        start_time = get_time_in_frac_seconds()
         vcap = cv2.VideoCapture(ip_cam_url)
         if vcap.isOpened():
             try:
                 ret, frame = vcap.read()
                 if ret:
-                    timestamp = get_time()
+                    timestamp = get_time_in_full_seconds()
                     lux_values = calculate_lux_values_from_image(label, frame)
                     write_lux_values_to_db(lux_values, label, timestamp)
                     if config.general.get("write_image"):
@@ -94,7 +98,7 @@ def handle_ip_cam_thread(label, ip_cam_url):
                 logger.error("cam reading error :{}".format(str(e)))
         else:
             logger.warn("cam {} closed, re initiating".format(ip_cam_url))
-        time_passed = get_time() - start_time
+        time_passed = get_time_in_frac_seconds() - start_time
         sleep_time = config.general.get("handle_ip_cam_thread_sleep_time") - time_passed
         logger.debug("going to sleep for {} seconds".format(sleep_time))
         time.sleep(sleep_time)
