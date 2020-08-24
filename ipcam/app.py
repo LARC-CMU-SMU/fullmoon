@@ -9,6 +9,7 @@ import cv2
 
 import config
 import db
+from util import *
 
 logger = logging.getLogger(__name__)
 
@@ -44,18 +45,29 @@ def get_time():
     return int(time.time())
 
 
-def get_lux_value_for_patch(image, patch_coordinates):
-    logger.debug("get_lux_value_for_patch with coordinates {}".format(patch_coordinates))
-    # todo : implement logic
-    return 20
+def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
+    # todo : retrieve the regressor formula and do the real transfer
+    return pixel_value
+
+
+def get_pixel_value_for_patch(image, mask):
+    logger.debug("get_lux_value_for_patch with coordinates")
+    pixel_values = get_pixel_statics_for_rgb_image(image, mask)
+    return pixel_values['mean']
 
 
 def calculate_lux_values_from_image(ip_cam_label, image):
     logger.debug("calculate_lux_values_from_image with label {}".format(ip_cam_label))
-    coordinates = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinates')
+    patch_coordinates_file = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinates_file')
+    coordinates = get_coords_from_labelimg_xml(patch_coordinates_file)
+    logger.debug("coordinates :{}".format(coordinates))
+    mask_size = image.shape[:2]
     lux_values = {}
-    for coordinate_label, coordinate in coordinates.items():
-        lux_value = get_lux_value_for_patch(image, coordinate)
+    for coordinate_label, points in coordinates.items():
+        mask = get_mask(points, mask_size)
+        pixel_value = get_pixel_value_for_patch(image, mask)
+        logger.debug("pixel value :{}".format(pixel_value))
+        lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, pixel_value)
         lux_values[coordinate_label] = lux_value
     return lux_values
 
