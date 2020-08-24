@@ -27,7 +27,7 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s: %(threadName)-12s: 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux) VALUES (%s, %s, %s, %s, %s)"
+QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux) VALUES (%s, %s, %s, %s)"
 
 SERVICE_NAME = "IPCAM"
 
@@ -36,7 +36,7 @@ def write_lux_values_to_db(lux_values, camera_label, timestamp):
     logger.debug("write_lux_values_to_db with ts {} cam_label {} lux {}".format(timestamp, camera_label, lux_values))
     to_db = []
     for patch_label, lux in lux_values.items():
-        to_db.insert((timestamp, camera_label, patch_label, lux))
+        to_db.append((timestamp, camera_label, patch_label, lux))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
 
