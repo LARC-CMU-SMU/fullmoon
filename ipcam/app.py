@@ -58,7 +58,7 @@ def get_pixel_value_for_patch(image, mask):
 
 def calculate_lux_values_from_image(ip_cam_label, image):
     logger.debug("calculate_lux_values_from_image with label {}".format(ip_cam_label))
-    patch_coordinates_file = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinates_file')
+    patch_coordinates_file = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinate_file')
     coordinates = get_coords_from_labelimg_xml(patch_coordinates_file)
     logger.debug("coordinates :{}".format(coordinates))
     mask_size = image.shape[:2]

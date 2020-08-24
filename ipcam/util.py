@@ -18,8 +18,8 @@ def get_coords_from_labelimg_xml(file_name):
     return boxes
 
 
-def get_mask(pt1, pt2, mask_size):
-    pt1, pt2
+def get_mask(points, mask_size):
+    pt1, pt2 = points
     mask = np.zeros(mask_size, np.uint8)
     cv2.rectangle(mask, pt1, pt2, [255, 255, 255], cv2.FILLED)
     return mask
