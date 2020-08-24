@@ -28,16 +28,17 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s: %(threadName)-12s: 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux) VALUES (%s, %s, %s, %s)"
+QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,pixel,lux) VALUES (%s, %s, %s, %s, %s)"
 
 SERVICE_NAME = "IPCAM"
 
 
-def write_lux_values_to_db(lux_values, camera_label, timestamp):
-    logger.debug("write_lux_values_to_db with ts {} cam_label {} lux {}".format(timestamp, camera_label, lux_values))
+def write_lux_values_to_db(patch_data, camera_label, timestamp):
+    logger.debug("write_lux_values_to_db with ts {} cam_label {} patch_data {}".
+                 format(timestamp, camera_label, patch_data))
     to_db = []
-    for patch_label, lux in lux_values.items():
-        to_db.append((timestamp, camera_label, patch_label, lux))
+    for patch_label, patch_data in patch_data.items():
+        to_db.append((timestamp, camera_label, patch_label, patch_data.get('pixel'), patch_data.get('lux')))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
 
@@ -66,14 +67,14 @@ def calculate_lux_values_from_image(ip_cam_label, image):
     coordinates = get_coords_from_labelimg_xml(patch_coordinates_file)
     logger.debug("coordinates :{}".format(coordinates))
     mask_size = image.shape[:2]
-    lux_values = {}
+    lux_and_pixel_values = {}
     for coordinate_label, points in coordinates.items():
         mask = get_mask(points, mask_size)
         pixel_value = get_pixel_value_for_patch(image, mask)
         logger.debug("pixel value :{}".format(pixel_value))
         lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, pixel_value)
-        lux_values[coordinate_label] = lux_value
-    return lux_values
+        lux_and_pixel_values[coordinate_label] = {'lux':lux_value, 'pixel':pixel_value}
+    return lux_and_pixel_values
 
 
 def handle_ip_cam_thread(label, ip_cam_url):
