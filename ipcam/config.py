@@ -33,6 +33,6 @@ ip_cam_meta = dict(
 )
 
 IP_CAM_DEVICES = {
-    # 'a': {'ip': '192.168.1.110','patch_coordinates':{'a':((10,20),(20,30)), 'b':((40,50),(50,60))}},
-    'b': {'ip': '192.168.1.109', 'patch_coordinate_file': 'patch_coordinates/b.xml'},
+    # 'a': {'ip': '192.168.1.109','patch_coordinates':{'a':((10,20),(20,30)), 'b':((40,50),(50,60))}},
+    'b': {'ip': '192.168.1.110', 'patch_coordinate_file': 'patch_coordinates/b.xml'},
 }
