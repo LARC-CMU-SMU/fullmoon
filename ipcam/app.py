@@ -74,8 +74,8 @@ def calculate_lux_values_from_image(ip_cam_label, image):
 
 def handle_ip_cam_thread(label, ip_cam_url):
     logger.debug("starting handle_ip_cam_thread for ip cam {} with url {}".format(label, ip_cam_url))
-    # vcap = cv2.VideoCapture(ip_cam_url)
     while 1:
+        start_time = get_time()
         vcap = cv2.VideoCapture(ip_cam_url)
         if vcap.isOpened():
             try:
@@ -90,13 +90,14 @@ def handle_ip_cam_thread(label, ip_cam_url):
                         cv2.imwrite(image_path, frame)
                 else:
                     logger.warn("read status false for {}".format(ip_cam_url))
-                    # vcap = cv2.VideoCapture(ip_cam_url)
             except Exception as e:
                 logger.error("cam reading error :{}".format(str(e)))
         else:
             logger.warn("cam {} closed, re initiating".format(ip_cam_url))
-            # vcap = cv2.VideoCapture(ip_cam_url)
-        time.sleep(config.general.get("handle_ip_cam_thread_sleep_time"))
+        time_passed = get_time() - start_time
+        sleep_time = config.general.get("handle_ip_cam_thread_sleep_time") - time_passed
+        logger.debug("going to sleep for {} seconds".format(sleep_time))
+        time.sleep(sleep_time)
 
 
 def main():
