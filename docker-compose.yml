@@ -12,6 +12,8 @@ services:
       POSTGRES_USER: fullmoon
       POSTGRES_DB: fullmoon
       POSTGRES_SCHEMA: fullmoon
+    ports:
+      - 5432:5432
 
   adminer:
     image: adminer
@@ -21,13 +23,13 @@ services:
     depends_on:
       - postgre
 
-#  record:
-#    build: ./record
-#    volumes:
-#      - ./docker_mount:/app/docker_mount
-#    restart: always
-#    depends_on:
-#      - postgre
+  record:
+    build: ./record
+    volumes:
+      - ./docker_mount:/app/docker_mount
+    restart: always
+    depends_on:
+      - postgre
 #
 #  control:
 #    build: ./control
