@@ -73,6 +73,8 @@ def get_time_in_frac_seconds():
 
 
 def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
+    logger.debug("get_lux_value_for_pixel_value cam_label {} patch_label {} pixel_value {}".format(
+        cam_label, patch_label, pixel_value))
     fp = FINGER_PRINTS.get(patch_label)
     ret_dict = {}
     for k, v in fp.items():
