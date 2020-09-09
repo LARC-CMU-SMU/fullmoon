@@ -28,17 +28,39 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s: %(threadName)-12s: 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,pixel,lux) VALUES (%s, %s, %s, %s, %s)"
+QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux_label,pixel,lux) " \
+                         "VALUES (%s, %s, %s, %s, %s, %s)"
+QUERY_FP_SELECT = "SELECT * FROM fp"
 
 SERVICE_NAME = "IPCAM"
+FINGER_PRINTS = {}
+PEARSON_CORR_THRESH = 0.9
 
 
-def write_lux_values_to_db(patch_data, camera_label, timestamp):
+def load_finger_prints():
+    fp_dict_list = db.execute_sql_for_dict(QUERY_FP_SELECT,[],logger)
+    num_of_finger_prints = len(fp_dict_list)
+    for fp in fp_dict_list:
+        patch_label = fp['patch_label']
+        if not FINGER_PRINTS.get(patch_label):
+            FINGER_PRINTS[patch_label] = {}
+        lux_label = fp['lux_label']
+        FINGER_PRINTS[patch_label][lux_label] = {'x2': float(fp['x2']),
+                                                 'x1': float(fp['x1']),
+                                                 'x0': float(fp['x0']),
+                                                 'pearson_corr': float(fp['pearson_corr'])}
+    logger.info('done loading {} finger prints'.format(num_of_finger_prints))
+
+
+def write_lux_values_to_db(lux_values, camera_label, timestamp):
     logger.debug("write_lux_values_to_db with ts {} cam_label {} patch_data {}".
-                 format(timestamp, camera_label, patch_data))
+                 format(timestamp, camera_label, lux_values))
     to_db = []
-    for patch_label, patch_data in patch_data.items():
-        to_db.append((timestamp, camera_label, patch_label, patch_data.get('pixel'), patch_data.get('lux')))
+    for patch_label, lux_data in lux_values.items():
+        pixel_val = lux_data.get('pixel')
+        lux_values = lux_data.get('lux')
+        for lux_label, lux_val in lux_values.items():
+            to_db.append((timestamp, camera_label, patch_label, lux_label, pixel_val, lux_val))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
 
@@ -51,8 +73,23 @@ def get_time_in_frac_seconds():
 
 
 def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
-    # todo : retrieve the regressor formula and do the real transfer
-    return pixel_value
+    fp = FINGER_PRINTS.get(patch_label)
+    ret_dict = {}
+    for k, v in fp:
+        ret_dict[k]={}
+        pearson_corr = v.get('pearson_corr')
+        logger.debug("pearson corr {}".format(pearson_corr))
+        if pearson_corr > PEARSON_CORR_THRESH:
+            x2 = v.get('x2')
+            x1 = v.get('x1')
+            x0 = v.get('x0')
+            lux_label = v.get('lux_label')
+            calc_lux_val = (pixel_value*x2*x2) + (pixel_value*x1) + x0
+            logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val".format(
+                pixel_value, x2, x1, x0, lux_label, calc_lux_val))
+
+            ret_dict[k][lux_label] = calc_lux_val
+    return ret_dict
 
 
 def get_pixel_value_for_patch(image, mask):
@@ -102,7 +139,8 @@ def handle_ip_cam_thread(label, ip_cam_url):
         time_passed = get_time_in_frac_seconds() - start_time
         sleep_time = config.general.get("handle_ip_cam_thread_sleep_time") - time_passed
         logger.debug("going to sleep for {} seconds".format(sleep_time))
-        time.sleep(sleep_time)
+        if sleep_time > 0:
+            time.sleep(sleep_time)
 
 
 def main():
@@ -112,6 +150,7 @@ def main():
     cam_user = config.ip_cam_meta.get("username")
     cam_pass = config.ip_cam_meta.get("password")
     cam_port = config.ip_cam_meta.get("port")
+    load_finger_prints()
     for cam_label, cam_data in config.IP_CAM_DEVICES.items():
         cam_ip = cam_data.get("ip")
         cam_url = "rtsp://{}:{}@{}:{}".format(cam_user, cam_pass, cam_ip, cam_port)

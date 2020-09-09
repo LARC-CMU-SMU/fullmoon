@@ -3,6 +3,7 @@ CREATE TABLE "fullmoon"."pixel_lux" (
     "timestamp" integer NOT NULL,
     "cam_label" text NOT NULL,
     "patch_label" text NOT NULL,
+    "lux_label" text NOT NULL,
     "lux" real NOT NULL,
     "pixel" real NOT NULL
 ) WITH (oids = false);

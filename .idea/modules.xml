@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/fullmoon.iml" filepath="$PROJECT_DIR$/.idea/fullmoon.iml" />
+      <module fileurl="file://$USER_HOME$/working_data/.idea/working_data.iml" filepath="$USER_HOME$/working_data/.idea/working_data.iml" />
     </modules>
   </component>
 </project>
