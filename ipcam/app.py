@@ -75,7 +75,7 @@ def get_time_in_frac_seconds():
 def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
     fp = FINGER_PRINTS.get(patch_label)
     ret_dict = {}
-    for k, v in fp:
+    for k, v in fp.items():
         ret_dict[k]={}
         pearson_corr = v.get('pearson_corr')
         logger.debug("pearson corr {}".format(pearson_corr))
@@ -83,9 +83,9 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
             x2 = v.get('x2')
             x1 = v.get('x1')
             x0 = v.get('x0')
-            lux_label = v.get('lux_label')
+            lux_label = k
             calc_lux_val = (pixel_value*x2*x2) + (pixel_value*x1) + x0
-            logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val".format(
+            logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val {}".format(
                 pixel_value, x2, x1, x0, lux_label, calc_lux_val))
 
             ret_dict[k][lux_label] = calc_lux_val
@@ -120,22 +120,24 @@ def handle_ip_cam_thread(label, ip_cam_url):
         start_time = get_time_in_frac_seconds()
         vcap = cv2.VideoCapture(ip_cam_url)
         if vcap.isOpened():
+            ret = False
             try:
                 ret, frame = vcap.read()
-                if ret:
-                    timestamp = get_time_in_full_seconds()
-                    lux_values = calculate_lux_values_from_image(label, frame)
-                    write_lux_values_to_db(lux_values, label, timestamp)
-                    if config.general.get("write_image"):
-                        image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, label))
-                        logger.debug("writing image to {}".format(image_path))
-                        cv2.imwrite(image_path, frame)
-                else:
-                    logger.warn("read status false for {}".format(ip_cam_url))
             except Exception as e:
                 logger.error("cam reading error :{}".format(str(e)))
+
+            if ret:
+                timestamp = get_time_in_full_seconds()
+                lux_values = calculate_lux_values_from_image(label, frame)
+                write_lux_values_to_db(lux_values, label, timestamp)
+                if config.general.get("write_image"):
+                    image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, label))
+                    logger.debug("writing image to {}".format(image_path))
+                    cv2.imwrite(image_path, frame)
+            else:
+                logger.warn("read status false for {}".format(ip_cam_url))
         else:
-            logger.warn("cam {} closed, re initiating".format(ip_cam_url))
+            logger.warn("cam {} closed".format(ip_cam_url))
         time_passed = get_time_in_frac_seconds() - start_time
         sleep_time = config.general.get("handle_ip_cam_thread_sleep_time") - time_passed
         logger.debug("going to sleep for {} seconds".format(sleep_time))
