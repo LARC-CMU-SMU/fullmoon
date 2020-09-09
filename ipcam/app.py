@@ -78,7 +78,7 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
     fp = FINGER_PRINTS.get(patch_label)
     ret_dict = {}
     for k, v in fp.items():
-        ret_dict[k]={}
+        ret_dict[k] = {}
         pearson_corr = v.get('pearson_corr')
         logger.debug("pearson corr {}".format(pearson_corr))
         if pearson_corr > PEARSON_CORR_THRESH:
@@ -90,7 +90,7 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
             logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val {}".format(
                 pixel_value, x2, x1, x0, lux_label, calc_lux_val))
 
-            ret_dict[k][lux_label] = calc_lux_val
+            ret_dict[lux_label] = calc_lux_val
     return ret_dict
 
 
