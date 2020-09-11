@@ -87,7 +87,7 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
             x2 = coefficient_data.get('x2')
             x1 = coefficient_data.get('x1')
             x0 = coefficient_data.get('x0')
-            calc_lux_val = (pixel_value*x2*x2) + (pixel_value*x1) + x0
+            calc_lux_val = (pixel_value*pixel_value*x2) + (pixel_value*x1) + x0
             # logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val {}".format(
             #     pixel_value, x2, x1, x0, lux_label, calc_lux_val))
 
