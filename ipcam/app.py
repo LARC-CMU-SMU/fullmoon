@@ -102,6 +102,7 @@ def get_pixel_value_for_patch(image, mask):
 
 def calculate_lux_values_from_image(ip_cam_label, image):
     logger.debug("calculate_lux_values_from_image with label {}".format(ip_cam_label))
+    # todo : load this at the beginning and save it in memory
     patch_coordinates_file = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinate_file')
     coordinates = get_coords_from_labelimg_xml(patch_coordinates_file)
     logger.debug("coordinates :{}".format(coordinates))
@@ -150,6 +151,9 @@ def handle_ip_cam_thread(label, ip_cam_url):
 def main():
     wait_time_for_db = config.general["wait_time_for_db"]
     logger.info("Waiting [%s] seconds for DB to come up", wait_time_for_db)
+    logger.info("Using coordinate files,")
+    for label, cam_data in config.IP_CAM_DEVICES:
+        logger.info("cam [{}] -> file [{}]".format(label, cam_data.get("patch_coordinate_file")))
     time.sleep(wait_time_for_db)
     cam_user = config.ip_cam_meta.get("username")
     cam_pass = config.ip_cam_meta.get("password")
