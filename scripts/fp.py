@@ -58,10 +58,10 @@ def process_pixel_lux_dict(lux_dict):
         m_pixel_label = lux_dict['patch_label'][i]
         cam_label = lux_dict['cam_label'][i]
         pixel = lux_dict['pixel'][i]
-        new_label = "{}_{}".format(cam_label, m_pixel_label)
-        if new_label not in inter_dict:
-            inter_dict[new_label] = []
-        inter_dict[new_label].append((ts, pixel))
+        # new_label = "{}_{}".format(cam_label, m_pixel_label)
+        if m_pixel_label not in inter_dict:
+            inter_dict[m_pixel_label] = []
+        inter_dict[m_pixel_label].append((ts, pixel))
     ret_dict = {}
     for k, v in inter_dict.items():
         label_dict = {}
