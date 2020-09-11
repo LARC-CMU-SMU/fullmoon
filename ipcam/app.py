@@ -151,9 +151,6 @@ def handle_ip_cam_thread(label, ip_cam_url):
 def main():
     wait_time_for_db = config.general["wait_time_for_db"]
     logger.info("Waiting [%s] seconds for DB to come up", wait_time_for_db)
-    logger.info("Using coordinate files,")
-    for label, cam_data in config.IP_CAM_DEVICES:
-        logger.info("cam [{}] -> file [{}]".format(label, cam_data.get("patch_coordinate_file")))
     time.sleep(wait_time_for_db)
     cam_user = config.ip_cam_meta.get("username")
     cam_pass = config.ip_cam_meta.get("password")
@@ -161,6 +158,8 @@ def main():
     load_finger_prints()
     for cam_label, cam_data in config.IP_CAM_DEVICES.items():
         cam_ip = cam_data.get("ip")
+        patch_coord_file = cam_data.get("patch_coordinate_file")
+        logger.info("cam [{}] -> file [{}]".format(cam_label, patch_coord_file))
         cam_url = "rtsp://{}:{}@{}:{}".format(cam_user, cam_pass, cam_ip, cam_port)
         threading.Thread(target=handle_ip_cam_thread, args=(cam_label, cam_url)).start()
     logger.info("init finished[{}]".format(SERVICE_NAME))
