@@ -76,9 +76,10 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
     logger.debug("get_lux_value_for_pixel_value cam_label {} patch_label {}".format(
         cam_label, patch_label))
     fp = FINGER_PRINTS.get(patch_label)
+    ret_dict = {}
     if not fp:
         logger.error("no finger print found for {}".format(patch_label))
-    ret_dict = {}
+        return ret_dict
     for lux_label, coefficient_data in fp.items():
         pearson_corr = coefficient_data.get('pearson_corr')
         # logger.debug("pearson corr {}".format(pearson_corr))
@@ -105,7 +106,6 @@ def calculate_lux_values_from_image(ip_cam_label, image):
     # todo : load this at the beginning and save it in memory
     patch_coordinates_file = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinate_file')
     coordinates = get_coords_from_labelimg_xml(patch_coordinates_file)
-    logger.debug("coordinates :{}".format(coordinates))
     mask_size = image.shape[:2]
     lux_and_pixel_values = {}
     for coordinate_label, points in coordinates.items():
