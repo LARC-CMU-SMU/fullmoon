@@ -2,10 +2,10 @@ from scripts.util.data_util import *
 from scripts.util.file_util import *
 import plotly.graph_objects as go
 
-CSV_DIR = "/Users/kasun/working_data/sep9/"
-LUX_FILE_NAME = "{}db_lux_part3.csv".format(CSV_DIR)
-SENSOR_TAG_LUX_FILE_NAME = "{}st_lux.csv".format(CSV_DIR)
-PIXEL_FILE_NAME = "{}pixel3.csv".format(CSV_DIR)
+CSV_DIR = "/Users/kasun/working_data/sep11/"
+LUX_FILE_NAME = "{}lux.csv".format(CSV_DIR)
+# SENSOR_TAG_LUX_FILE_NAME = "{}st_lux.csv".format(CSV_DIR)
+PIXEL_FILE_NAME = "{}pixel_lux.csv".format(CSV_DIR)
 OUT_CSV = '{}correlation_pt3.csv'.format(CSV_DIR)
 
 FLOAT_DATA_HEADERS = ["pixel", 'lux', 'light']
@@ -18,8 +18,8 @@ pixel_data = fix_data_types(pixel_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TI
 lux_data = get_data_dictionary_from_csv(LUX_FILE_NAME)
 lux_data = fix_data_types(lux_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
 
-st_lux_data = get_data_dictionary_from_csv(SENSOR_TAG_LUX_FILE_NAME)
-st_lux_data = fix_data_types(st_lux_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
+# st_lux_data = get_data_dictionary_from_csv(SENSOR_TAG_LUX_FILE_NAME)
+# st_lux_data = fix_data_types(st_lux_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
 
 
 def get_shifted_sensor_tag_time_line(m_ts_list, delta):
@@ -42,6 +42,26 @@ def process_wired_lux_dict(lux_dict):
         if new_label not in inter_dict:
             inter_dict[new_label] = []
         inter_dict[new_label].append((ts, lux))
+    ret_dict = {}
+    for k, v in inter_dict.items():
+        label_dict = {}
+        for tup in v:
+            label_dict[tup[0]] = float(tup[1])
+        ret_dict[k] = label_dict
+    return ret_dict
+
+
+def process_pixel_lux_dict(lux_dict):
+    inter_dict = {}
+    for i in range(len(lux_dict['timestamp'])):
+        ts = lux_dict['aligned_ts'][i]
+        m_pixel_label = lux_dict['patch_label'][i]
+        cam_label = lux_dict['cam_label'][i]
+        pixel = lux_dict['pixel'][i]
+        new_label = "{}_{}".format(cam_label, m_pixel_label)
+        if new_label not in inter_dict:
+            inter_dict[new_label] = []
+        inter_dict[new_label].append((ts, pixel))
     ret_dict = {}
     for k, v in inter_dict.items():
         label_dict = {}
@@ -106,22 +126,22 @@ def get_synced_pixel_lux_lists(pixel_label_dict, lux_label_dict):
 
 
 # correct the time diff on PC and rpi used to collect the sensor tag data
-st_lux_data['timestamp'] = get_shifted_sensor_tag_time_line(st_lux_data['timestamp'], 3360)
+# st_lux_data['timestamp'] = get_shifted_sensor_tag_time_line(st_lux_data['timestamp'], 3360)
 
 # smooth the timestamps
 lux_data['aligned_ts'] = align_ts(lux_data['timestamp'])
 pixel_data['aligned_ts'] = align_ts(pixel_data['timestamp'])
-st_lux_data['aligned_ts'] = align_ts(st_lux_data['timestamp'])
+# st_lux_data['aligned_ts'] = align_ts(st_lux_data['timestamp'])
 
 # rearrange the data to make it easier to calculate correlation
 processed_lux = process_wired_lux_dict(lux_data)
-processed_pixel = process_pixel_dict(pixel_data)
-processed_st_lux = process_sensor_tag_lux_dict(st_lux_data)
+processed_pixel = process_pixel_lux_dict(pixel_data)
+# processed_st_lux = process_sensor_tag_lux_dict(st_lux_data)
 
 # combine the wired lux and sensor tag lux together
 processed_lux_all = {}
 processed_lux_all.update(processed_lux)
-processed_lux_all.update(processed_st_lux)
+# processed_lux_all.update(processed_st_lux)
 
 to_csv_dict_list = []
 

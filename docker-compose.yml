@@ -1,49 +1,52 @@
 version: '3'
 
 services:
-  postgre:
-    image: "postgres:alpine"
-    restart: always
-    volumes:
-      - ./docker_mount/data/postgre/scripts/:/docker-entrypoint-initdb.d
-      - ./docker_mount/data/postgre/db/:/var/lib/postgresql/data
-    environment:
-      POSTGRES_PASSWORD: fullmoon
-      POSTGRES_USER: fullmoon
-      POSTGRES_DB: fullmoon
-      POSTGRES_SCHEMA: fullmoon
-    ports:
-      - 5432:5432
+#  postgre:
+#    image: "postgres:alpine"
+#    restart: always
+#    volumes:
+#      - ./docker_mount/data/postgre/scripts/:/docker-entrypoint-initdb.d
+#      - ./docker_mount/data/postgre/db/:/var/lib/postgresql/data
+#    environment:
+#      POSTGRES_PASSWORD: fullmoon
+#      POSTGRES_USER: fullmoon
+#      POSTGRES_DB: fullmoon
+#      POSTGRES_SCHEMA: fullmoon
+#    ports:
+#      - 5432:5432
+#
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 8000:8080
+#    depends_on:
+#      - postgre
+#
+#  record:
+#    build: ./record
+#    volumes:
+#      - ./docker_mount:/app/docker_mount
+#    restart: always
+#    depends_on:
+#      - postgre
+#
+#  control:
+#    build: ./control
+#    volumes:
+#      - ./docker_mount:/app/docker_mount
+#    restart: always
+#    depends_on:
+#      - postgre
+#
+#  ipcam:
+#    build: ./ipcam
+#    volumes:
+#      - ./docker_mount:/app/docker_mount
+#    restart: always
+#    depends_on:
+#      - postgre
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8000:8080
-    depends_on:
-      - postgre
-
-  record:
-    build: ./record
-    volumes:
-      - ./docker_mount:/app/docker_mount
-    restart: always
-    depends_on:
-      - postgre
-
-  control:
-    build: ./control
-    volumes:
-      - ./docker_mount:/app/docker_mount
-    restart: always
-    depends_on:
-      - postgre
-
-  ipcam:
-    build: ./ipcam
-    volumes:
-      - ./docker_mount:/app/docker_mount
-    restart: always
-    depends_on:
-      - postgre
+  graph:
+    build: ./graph
 

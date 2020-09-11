@@ -34,7 +34,7 @@ QUERY_FP_SELECT = "SELECT * FROM fp"
 
 SERVICE_NAME = "IPCAM"
 FINGER_PRINTS = {}
-PEARSON_CORR_THRESH = 0.9
+PEARSON_CORR_THRESH = 0.95
 
 
 def load_finger_prints():
@@ -79,14 +79,14 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
     ret_dict = {}
     for lux_label, coefficient_data in fp.items():
         pearson_corr = coefficient_data.get('pearson_corr')
-        logger.debug("pearson corr {}".format(pearson_corr))
+        # logger.debug("pearson corr {}".format(pearson_corr))
         if pearson_corr > PEARSON_CORR_THRESH:
             x2 = coefficient_data.get('x2')
             x1 = coefficient_data.get('x1')
             x0 = coefficient_data.get('x0')
             calc_lux_val = (pixel_value*x2*x2) + (pixel_value*x1) + x0
-            logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val {}".format(
-                pixel_value, x2, x1, x0, lux_label, calc_lux_val))
+            # logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val {}".format(
+            #     pixel_value, x2, x1, x0, lux_label, calc_lux_val))
 
             ret_dict[lux_label] = calc_lux_val
     return ret_dict
@@ -108,7 +108,7 @@ def calculate_lux_values_from_image(ip_cam_label, image):
     for coordinate_label, points in coordinates.items():
         mask = get_mask(points, mask_size)
         pixel_value = get_pixel_value_for_patch(image, mask)
-        logger.debug("pixel value :{}".format(pixel_value))
+        # logger.debug("pixel value :{}".format(pixel_value))
         lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, pixel_value)
         lux_and_pixel_values[coordinate_label] = {'lux':lux_value, 'pixel':pixel_value}
     return lux_and_pixel_values
