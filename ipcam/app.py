@@ -53,8 +53,8 @@ def load_finger_prints():
 
 
 def write_lux_values_to_db(lux_values, camera_label, timestamp):
-    logger.debug("write_lux_values_to_db with ts {} cam_label {} patch_data {}".
-                 format(timestamp, camera_label, lux_values))
+    logger.debug("write_lux_values_to_db with ts {} cam_label {}".
+                 format(timestamp, camera_label))
     to_db = []
     for patch_label, lux_data in lux_values.items():
         pixel_val = lux_data.get('pixel')
@@ -73,8 +73,8 @@ def get_time_in_frac_seconds():
 
 
 def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
-    logger.debug("get_lux_value_for_pixel_value cam_label {} patch_label {}".format(
-        cam_label, patch_label))
+    # logger.debug("get_lux_value_for_pixel_value cam_label {} patch_label {}".format(
+    #     cam_label, patch_label))
     fp = FINGER_PRINTS.get(patch_label)
     ret_dict = {}
     if not fp:
