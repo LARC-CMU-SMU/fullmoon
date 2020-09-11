@@ -96,7 +96,7 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
 
 
 def get_pixel_value_for_patch(image, mask):
-    logger.debug("get_lux_value_for_patch with coordinates")
+    # logger.debug("get_lux_value_for_patch with coordinates")
     pixel_values = get_pixel_statics_for_rgb_image(image, mask)
     return pixel_values['mean']
 
