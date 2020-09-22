@@ -12,8 +12,9 @@ from plotly.subplots import make_subplots
 
 from scripts.util.data_util import convert_str_list_to_time
 
-TRUE_LUX_QUERY = "SELECT * FROM lux ORDER BY timestamp DESC LIMIT 1000"
-PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux ORDER BY timestamp DESC LIMIT 100000"
+TRUE_LUX_QUERY = "SELECT * FROM lux WHERE timestamp > 1600096083 and timestamp < 1600101372 ORDER BY timestamp;-- DESC LIMIT 1000"
+PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux WHERE timestamp > 1600096083 and timestamp < 1600101372 ORDER BY timestamp; --ORDER BY timestamp DESC LIMIT 100000"
+FP_QUERY = "select * from fp where lux_label = %s order by pearson_corr desc limit 1"
 
 # X = deque(maxlen=20)
 # X.append(1)
@@ -22,6 +23,11 @@ PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux ORDER BY timestamp DESC LIMIT 100000"
 
 LUX_DATA={}
 P_LUX_DATA={}
+
+
+def get_highest_correlation(lux_label):
+    from_db = execute_sql_for_dict(FP_QUERY, [lux_label,])
+    return from_db[0]
 
 
 def get_true_lux():
@@ -89,11 +95,13 @@ def execute_sql_for_dict(query, values):
 
 
 def update_graph_scatter():
-    sensor='a_tsl_9'
+    sensor='b_tsl_2'
+
+
     update_data()
-
+    #
     fig = go.Figure()
-
+    #
     labels = LUX_DATA.keys()
     sorted(labels)
     for i,label in enumerate(labels):
@@ -110,15 +118,22 @@ def update_graph_scatter():
     for i, label in enumerate(labels):
         if not sensor in label:
             continue
+        highest_pcorr = get_highest_correlation(sensor)
+        # highest_pcorr_patch_label = highest_pcorr.get('patch_label')
+        highest_pcorr_patch_label = "B10"
+
+
+        if highest_pcorr_patch_label not in label:
+            continue
         data = P_LUX_DATA.get(label)
         fig.add_trace(go.Scatter(x=convert_str_list_to_time(data.get('ts')),
                                  y=data.get('lux'),
                                  mode='lines',
                                  name="p_lux_{}".format(label)))
-        # fig.add_trace(go.Scatter(x=convert_str_list_to_time(data.get('ts')),
-        #                          y=data.get('pixel'),
-        #                          mode='lines',
-        #                          name="p_pixel_{}".format(label)))
+        fig.add_trace(go.Scatter(x=convert_str_list_to_time(data.get('ts')),
+                                 y=data.get('pixel'),
+                                 mode='lines',
+                                 name="p_pixel_{}".format(label)))
 
     fig.show()
 

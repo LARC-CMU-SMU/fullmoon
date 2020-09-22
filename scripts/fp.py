@@ -1,12 +1,18 @@
+
+from scripts.m_util import *
 from scripts.util.data_util import *
 from scripts.util.file_util import *
 import plotly.graph_objects as go
 
-CSV_DIR = "/Users/kasun/working_data/sep11/"
-LUX_FILE_NAME = "{}lux.csv".format(CSV_DIR)
+CSV_DIR = "/Users/kasun/working_data/sep15/"
+LUX_FILE_NAME = "{}lux1.csv".format(CSV_DIR)
+# LUX_FILE_NAME2 = "{}lux2.csv".format(CSV_DIR)
+
 # SENSOR_TAG_LUX_FILE_NAME = "{}st_lux.csv".format(CSV_DIR)
-PIXEL_FILE_NAME = "{}pixel_lux.csv".format(CSV_DIR)
-OUT_CSV = '{}correlation_pt3.csv'.format(CSV_DIR)
+PIXEL_FILE_NAME = "{}pixel_lux1.csv".format(CSV_DIR)
+# PIXEL_FILE_NAME2 = "{}pixel_lux_exp2.csv".format(CSV_DIR)
+
+OUT_CSV = '{}correlation.csv'.format(CSV_DIR)
 
 FLOAT_DATA_HEADERS = ["pixel", 'lux', 'light']
 INT_DATA_HEADERS = ['timestamp', ]
@@ -15,8 +21,13 @@ TIME_DATA_HEADERS = []
 pixel_data = get_data_dictionary_from_csv(PIXEL_FILE_NAME)
 pixel_data = fix_data_types(pixel_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
 
+# pixel_data2 = get_data_dictionary_from_csv(PIXEL_FILE_NAME2)
+# pixel_data2 = fix_data_types(pixel_data2, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
+
 lux_data = get_data_dictionary_from_csv(LUX_FILE_NAME)
 lux_data = fix_data_types(lux_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
+# lux_data2 = get_data_dictionary_from_csv(LUX_FILE_NAME2)
+# lux_data2 = fix_data_types(lux_data2, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
 
 # st_lux_data = get_data_dictionary_from_csv(SENSOR_TAG_LUX_FILE_NAME)
 # st_lux_data = fix_data_types(st_lux_data, FLOAT_DATA_HEADERS, INT_DATA_HEADERS, TIME_DATA_HEADERS)
@@ -27,124 +38,77 @@ def get_shifted_sensor_tag_time_line(m_ts_list, delta):
     return ret_list
 
 
-def align_ts(m_ts_list, delta=5):
-    return [delta * round(x / delta) for x in m_ts_list]
-
-
-def process_wired_lux_dict(lux_dict):
-    inter_dict = {}
-    for i in range(len(lux_dict['timestamp'])):
-        ts = lux_dict['aligned_ts'][i]
-        label = lux_dict['label'][i]
-        pin = lux_dict['pin'][i]
-        lux = lux_dict['lux'][i]
-        new_label = "{}_{}".format(label, pin)
-        if new_label not in inter_dict:
-            inter_dict[new_label] = []
-        inter_dict[new_label].append((ts, lux))
-    ret_dict = {}
-    for k, v in inter_dict.items():
-        label_dict = {}
-        for tup in v:
-            label_dict[tup[0]] = float(tup[1])
-        ret_dict[k] = label_dict
-    return ret_dict
-
-
-def process_pixel_lux_dict(lux_dict):
-    inter_dict = {}
-    for i in range(len(lux_dict['timestamp'])):
-        ts = lux_dict['aligned_ts'][i]
-        m_pixel_label = lux_dict['patch_label'][i]
-        cam_label = lux_dict['cam_label'][i]
-        pixel = lux_dict['pixel'][i]
-        # new_label = "{}_{}".format(cam_label, m_pixel_label)
-        if m_pixel_label not in inter_dict:
-            inter_dict[m_pixel_label] = []
-        inter_dict[m_pixel_label].append((ts, pixel))
-    ret_dict = {}
-    for k, v in inter_dict.items():
-        label_dict = {}
-        for tup in v:
-            label_dict[tup[0]] = float(tup[1])
-        ret_dict[k] = label_dict
-    return ret_dict
-
-
-def process_sensor_tag_lux_dict(st_lux_dict):
-    inter_dict = {}
-    for i in range(len(st_lux_dict['timestamp'])):
-        ts = st_lux_dict['aligned_ts'][i]
-        label = st_lux_dict['label'][i]
-        pin = 'sensor_tag'
-        lux = st_lux_dict['light'][i]
-        new_label = "{}_{}".format(label, pin)
-        if new_label not in inter_dict:
-            inter_dict[new_label] = []
-        inter_dict[new_label].append((ts, lux))
-    ret_dict = {}
-    for k, v in inter_dict.items():
-        label_dict = {}
-        for tup in v:
-            label_dict[tup[0]] = float(tup[1])
-        ret_dict[k] = label_dict
-    return ret_dict
-
-
-def process_pixel_dict(pixel_dict):
-    inter_dict = {}
-    m_ts_list = pixel_dict['aligned_ts']
-    for k, v in pixel_dict.items():
-        inter_dict[k] = list(zip(m_ts_list, v))
-    ret_dict = {}
-    for k, v in inter_dict.items():
-        label_dict = {}
-        for tup in v:
-            label_dict[tup[0]] = float(tup[1])
-        ret_dict[k] = label_dict
-    del ret_dict['timestamp']
-    del ret_dict['aligned_ts']
-
-    return ret_dict
-
-
-def get_synced_pixel_lux_lists(pixel_label_dict, lux_label_dict):
-    lux_ts_list = lux_label_dict.keys()
-    sorted(lux_ts_list)
-    m_lux_list = []
-    m_pixel_list = []
-    ret_ts_list = []
-    for ts in lux_ts_list:
-        lux_val = lux_label_dict.get(ts)
-        if lux_val > 3:  # remove the sub 3 lux data points to avoid the strong correlation resulting from 0,0 points
-            pixel_val = pixel_label_dict.get(ts)
-            if pixel_val is not None:
-                m_lux_list.append(lux_val)
-                m_pixel_list.append(pixel_val)
-                ret_ts_list.append(ts)
-    return ret_ts_list, m_lux_list, m_pixel_list
-
 
 # correct the time diff on PC and rpi used to collect the sensor tag data
 # st_lux_data['timestamp'] = get_shifted_sensor_tag_time_line(st_lux_data['timestamp'], 3360)
 
-# smooth the timestamps
-lux_data['aligned_ts'] = align_ts(lux_data['timestamp'])
-pixel_data['aligned_ts'] = align_ts(pixel_data['timestamp'])
-# st_lux_data['aligned_ts'] = align_ts(st_lux_data['timestamp'])
 
 # rearrange the data to make it easier to calculate correlation
 processed_lux = process_wired_lux_dict(lux_data)
+# processed_lux2 = process_wired_lux_dict(lux_data2)
+
 processed_pixel = process_pixel_lux_dict(pixel_data)
+# processed_pixel2 = process_pixel_lux_dict(pixel_data2)
 # processed_st_lux = process_sensor_tag_lux_dict(st_lux_data)
 
 # combine the wired lux and sensor tag lux together
 processed_lux_all = {}
 processed_lux_all.update(processed_lux)
+# processed_lux_all2 = {}
+# processed_lux_all2.update(processed_lux2)
 # processed_lux_all.update(processed_st_lux)
 
 to_csv_dict_list = []
 
+for_testing_coeff = {}
+
+# for pixel_label in processed_pixel.keys():
+#     for lux_label in processed_lux_all.keys():
+#         current_pixel_dict = processed_pixel[pixel_label]
+#         current_lux_dict = processed_lux_all[lux_label]
+#
+#         ts_list, lux_list, pixel_list = get_synced_pixel_lux_lists(current_pixel_dict, current_lux_dict)
+#
+#         lux_list = np.asarray(lux_list)
+#         pixel_list = np.asarray(pixel_list)
+#         if len(ts_list) > 0:
+#             fit = np.polyfit(pixel_list,lux_list, 2)  # all prev lines are there, in order for us to do this !!!!
+#             corr = get_pearson_correlation_coefficient(pixel_list, lux_list)
+#
+#             current_dict = {
+#                 'patch_label': pixel_label,
+#                 'lux_label': lux_label,
+#                 'tuple_len': len(ts_list),
+#                 'pearson_corr': corr,
+#                 'x2': fit[0],
+#                 'x1': fit[1],
+#                 'x0': fit[2]
+#             }
+#             # calc_lux_list
+#             to_csv_dict_list.append(current_dict)
+
+            # if corr > .97:
+            #     calc_lux_list=[fit[0] * x * x + fit[1] * x + fit[2] for x in pixel_list]
+            #     import matplotlib.pyplot as plt
+            #     fig,(a1,a2) = plt.subplots(1,2)
+            #     a1.scatter(pixel_list, lux_list)
+            #     sorted_pixel_list_for_plot = pixel_list.copy()
+            #     sorted_pixel_list_for_plot.sort()
+            #     a1.plot(sorted_pixel_list_for_plot,
+            #              fit[0] * sorted_pixel_list_for_plot * sorted_pixel_list_for_plot + fit[1] * sorted_pixel_list_for_plot + fit[2])
+            #     a2.scatter(lux_list,calc_lux_list)
+            #     a2.plot(lux_list,lux_list)
+            #     plt.title("pixel {} vs lux {}".format(pixel_label, lux_label))
+            #     plt.show()
+            #
+            #     print("corr is higher than .97")
+
+# write_dictionary_to_csv_file(to_csv_dict_list, OUT_CSV)
+
+FP=load_finger_prints()
+fig = go.Figure()
+
+### testing
 for pixel_label in processed_pixel.keys():
     for lux_label in processed_lux_all.keys():
         current_pixel_dict = processed_pixel[pixel_label]
@@ -154,22 +118,38 @@ for pixel_label in processed_pixel.keys():
 
         lux_list = np.asarray(lux_list)
         pixel_list = np.asarray(pixel_list)
+        calculated_coefficients = FP.get(pixel_label).get(lux_label)
         if len(ts_list) > 0:
-            fit = np.polyfit(lux_list, pixel_list, 2)  # all prev lines are there so we can do this !!!!
-            corr = get_pearson_correlation_coefficient(lux_list, pixel_list)
+            if calculated_coefficients['pearson_corr'] > .97:
+                if 'b' in lux_label:
+                    print(lux_label)
+                    x2=calculated_coefficients['x2']
+                    x1=calculated_coefficients['x1']
+                    x0=calculated_coefficients['x0']
 
-            current_dict = {
-                'patch_label': pixel_label,
-                'lux_label': lux_label,
-                'tuple_len': len(ts_list),
-                'pearson_corr': corr,
-                'x2': fit[0],
-                'x1': fit[1],
-                'x0': fit[2]
-            }
-            to_csv_dict_list.append(current_dict)
+                    calc_lux_list2=[x2 * x * x + x1 * x + x0 for x in pixel_list]
+                    # import matplotlib.pyplot as plt
+                    # _,(a1,a2) = plt.subplots(1,2)
+                    # a1.scatter(pixel_list2, lux_list2)
+                    # sorted_pixel_list_for_plot = pixel_list2.copy()
+                    # sorted_pixel_list_for_plot.sort()
+                    # a2.scatter(lux_list2,calc_lux_list2)
+                    # a2.plot(lux_list2,lux_list2)
+                    # plt.title("pixel {} vs lux {}".format(pixel_label, lux_label))
+                    # plt.show()
 
-write_dictionary_to_csv_file(to_csv_dict_list, OUT_CSV)
+                    fig.add_trace(go.Scatter(x=convert_str_list_to_time(ts_list),
+                                             y=lux_list,
+                                             mode='lines',
+                                             name="lux_{}".format(lux_label)))
+                    fig.add_trace(go.Scatter(x=convert_str_list_to_time(ts_list),
+                                             y=calc_lux_list2,
+                                             mode='lines',
+                                             name="calc_lux_{} <- {}".format(lux_label, pixel_label)))
+            #
+                    # print("corr is higher than .97")
+
+fig.show()
 
 # ts_list, lux_list, pixel_list = get_synced_pixel_lux_lists(processed_pixel,processed_st_lux,PIXEL_LABEL,LUX_LABLE)
 
