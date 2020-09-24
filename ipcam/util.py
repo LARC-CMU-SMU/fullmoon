@@ -25,12 +25,13 @@ def get_mask(points, mask_size):
     return mask
 
 
-def get_pixel_statics_for_rgb_image(m_image, m_mask):
+def get_pixel_statics_for_bgr_image(m_image, m_mask):
     m_gray_image = cv2.cvtColor(m_image, cv2.COLOR_BGR2GRAY)
     m_mean, m_stddev = get_mean_and_stddev_from_gray_image_for_mask(m_gray_image, m_mask)
     m_mask_size = get_non_zero_pixels_for_mask(m_mask)
     m_min, m_max = get_min_max_from_gray_image_for_mask(m_gray_image, m_mask)
-
+    m_hsv_image = cv2.cvtColor(m_image, cv2.COLOR_BGR2HSV)
+    get_mean_and_stddev_from_hsv_image_for_mask(m_hsv_image, m_mask)
     return {
         'mean': m_mean,
         'stddev': m_stddev,
@@ -38,6 +39,12 @@ def get_pixel_statics_for_rgb_image(m_image, m_mask):
         'min': m_min,
         'max': m_max
     }
+
+
+def get_mean_and_stddev_from_hsv_image_for_mask(img, mask):
+    m_mean, m_stddev = cv2.meanStdDev(img, mask=mask)
+    print("mean", m_mean)
+    print("stddev", m_stddev)
 
 
 def get_mean_and_stddev_from_gray_image_for_mask(img, mask):
