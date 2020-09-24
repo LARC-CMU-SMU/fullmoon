@@ -72,6 +72,7 @@ def init_weight_matrix():
     WEIGHT_MATRIX = get_weight_matrix_from_db()
 
 
+# make sure the DC level is within bounds
 def validate_dc(dc):
     logger.debug("validating dc {}".format(dc))
     if dc < DC_LOWER_BOUND:
@@ -91,6 +92,7 @@ def set_dc_in_section(section, dc):
         logger.error("setting lux failed")
 
 
+# instantly light up newly occupied sections
 def handle_newly_occupied():
     logger.debug("starting handle_newly_occupied thread")
     prev_occupancy_dict = get_occupancy_from_db()
@@ -109,7 +111,8 @@ def handle_newly_occupied():
         time.sleep(sleep_time)
 
 
-def get_optimum_lux_vector_for_occupancy_vector(occupancy_vector):
+# returns the should be lux levels for the sections based on occupancy
+def get_should_be_lux_vector_for_occupancy_vector(occupancy_vector):
     optimum_lux_vector = {}
     for section, occupied in occupancy_vector.items():
         optimum_lux = MIN_LUX
@@ -119,13 +122,17 @@ def get_optimum_lux_vector_for_occupancy_vector(occupancy_vector):
     return optimum_lux_vector
 
 
-def get_deficit_lux_vector(optimum_lux, current_lux):
+# returns the change of lux levels system should make
+# ie if the section has 50 lux now and the should be lux is 60, deficit lux is 10
+# can be positive or negative
+def get_deficit_lux_vector(should_be_lux, current_lux):
     deficit_lux_vector = {}
-    for section in optimum_lux.keys():
-        deficit_lux_vector[section] = optimum_lux[section] - current_lux[section]
+    for section in should_be_lux.keys():
+        deficit_lux_vector[section] = should_be_lux[section] - current_lux[section]
     return deficit_lux_vector
 
 
+# returns the optimum dc values that should to be set to fill the deficit lux levels
 def get_dc_vector(deficit_lux_vector, weight_matrix):
     # todo : use the weight matrix to calculate the correct dc value
     dc_vector = {}
@@ -137,7 +144,7 @@ def get_dc_vector(deficit_lux_vector, weight_matrix):
 def get_calculated_optimized_dc():
     occupancy_vector = get_occupancy_from_db()
     logger.info("occupancy_vector {}".format(occupancy_vector))
-    optimum_lux_vector = get_optimum_lux_vector_for_occupancy_vector(occupancy_vector)
+    optimum_lux_vector = get_should_be_lux_vector_for_occupancy_vector(occupancy_vector)
     logger.info("optimum_lux_vector {}".format(optimum_lux_vector))
     current_lux_vector = get_current_lux_from_db()
     logger.info("current_lux_vector {}".format(current_lux_vector))

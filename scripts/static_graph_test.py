@@ -1,19 +1,17 @@
-import dash
-from dash.dependencies import Output, Input
-import dash_core_components as dcc
-import dash_html_components as html
-import plotly
-import random
 import plotly.graph_objs as go
-from collections import deque
 import psycopg2
 import psycopg2.extras
-from plotly.subplots import make_subplots
 
 from scripts.util.data_util import convert_str_list_to_time
 
-TRUE_LUX_QUERY = "SELECT * FROM lux WHERE timestamp > 1600096083 and timestamp < 1600101372 ORDER BY timestamp;-- DESC LIMIT 1000"
-PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux WHERE timestamp > 1600096083 and timestamp < 1600101372 ORDER BY timestamp; --ORDER BY timestamp DESC LIMIT 100000"
+# start_ts = 1600096083
+# end_ts = 1600101372
+
+start_ts = 1600133403
+end_ts = 1600136999
+
+TRUE_LUX_QUERY = "SELECT * FROM lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp;-- DESC LIMIT 1000".format(start_ts,end_ts)
+PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp; --ORDER BY timestamp DESC LIMIT 100000".format(start_ts,end_ts)
 FP_QUERY = "select * from fp where lux_label = %s order by pearson_corr desc limit 1"
 
 # X = deque(maxlen=20)
@@ -95,7 +93,7 @@ def execute_sql_for_dict(query, values):
 
 
 def update_graph_scatter():
-    sensor='b_tsl_2'
+    sensor='a_tsl_9'
 
 
     update_data()
@@ -119,8 +117,9 @@ def update_graph_scatter():
         if not sensor in label:
             continue
         highest_pcorr = get_highest_correlation(sensor)
-        # highest_pcorr_patch_label = highest_pcorr.get('patch_label')
-        highest_pcorr_patch_label = "B10"
+        highest_pcorr_patch_label = highest_pcorr.get('patch_label')
+        print(highest_pcorr)
+        # highest_pcorr_patch_label = "C3"
 
 
         if highest_pcorr_patch_label not in label:
