@@ -38,20 +38,18 @@ def get_pixel_statics_for_bgr_image(m_image, m_mask):
         'mask_size': m_mask_size,
         'min': m_min,
         'max': m_max,
-        'h_mean':m_hsv_mean[0][0],
-        's_mean': m_hsv_mean[0][1],
-        'v_mean': m_hsv_mean[0][2],
-        'h_stddev': m_hsv_stddev[0][0],
-        's_stddev': m_hsv_stddev[0][1],
-        'v_stddev': m_hsv_stddev[0][2],
+        'h_mean':m_hsv_mean[0],
+        's_mean': m_hsv_mean[1],
+        'v_mean': m_hsv_mean[2],
+        'h_stddev': m_hsv_stddev[0],
+        's_stddev': m_hsv_stddev[1],
+        'v_stddev': m_hsv_stddev[2],
     }
 
 
 def get_mean_and_stddev_from_hsv_image_for_mask(img, mask):
     m_mean, m_stddev = cv2.meanStdDev(img, mask=mask)
     return m_mean, m_stddev
-    # print("mean", m_mean)
-    # print("stddev", m_stddev)
 
 
 def get_mean_and_stddev_from_gray_image_for_mask(img, mask):
