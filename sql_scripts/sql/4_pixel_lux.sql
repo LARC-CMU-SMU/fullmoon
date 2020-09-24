@@ -5,7 +5,13 @@ CREATE TABLE "fullmoon"."pixel_lux" (
     "patch_label" text NOT NULL,
     "lux_label" text NOT NULL,
     "lux" real NOT NULL,
-    "pixel" real NOT NULL
+    "pixel" real NOT NULL,
+    "h_mean" real NOT NULL,
+    "s_mean" real NOT NULL,
+    "v_mean" real NOT NULL,
+    "h_stddev" real NOT NULL,
+    "s_stddev" real NOT NULL,
+    "v_stddev" real NOT NULL,
 ) WITH (oids = false);
 
 CREATE INDEX "pixel_lux_timestamp" ON "fullmoon"."pixel_lux" USING btree ("timestamp");

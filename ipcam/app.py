@@ -28,8 +28,8 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s: %(threadName)-12s: 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux_label,pixel,lux) " \
-                         "VALUES (%s, %s, %s, %s, %s, %s)"
+QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux_label,pixel,lux,h_mean,s_mean,v_mean,h_stddev,s_stddev,v_stddev) " \
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 QUERY_FP_SELECT = "SELECT * FROM fp"
 
 SERVICE_NAME = "IPCAM"
@@ -57,10 +57,28 @@ def write_lux_values_to_db(lux_values, camera_label, timestamp):
                  format(timestamp, camera_label))
     to_db = []
     for patch_label, lux_data in lux_values.items():
-        pixel_val = lux_data.get('pixel')
+        m_gray_mean = lux_data.get('gray_mean')
+        m_h_mean = lux_data.get('h_mean')
+        m_s_mean = lux_data.get('s_mean')
+        m_v_mean = lux_data.get('v_mean')
+        m_h_stddev = lux_data.get('h_stddev')
+        m_s_stddev = lux_data.get('s_stddev')
+        m_v_stddev = lux_data.get('v_stddev')
         lux_values = lux_data.get('lux')
         for lux_label, lux_val in lux_values.items():
-            to_db.append((timestamp, camera_label, patch_label, lux_label, pixel_val, lux_val))
+            to_db.append((timestamp,
+                          camera_label,
+                          patch_label,
+                          lux_label,
+                          m_gray_mean,
+                          lux_val,
+                          m_h_mean,
+                          m_s_mean,
+                          m_v_mean,
+                          m_h_stddev,
+                          m_s_stddev,
+                          m_v_stddev,
+                          ))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
 
@@ -110,15 +128,25 @@ def calculate_lux_values_from_image(ip_cam_label, image):
     lux_and_pixel_values = {}
     for coordinate_label, points in coordinates.items():
         mask = get_mask(points, mask_size)
-        pixel_value = get_pixel_value_for_patch(image, mask)
+        pixel_stat = get_pixel_value_for_patch(image, mask)
+        gray_pixel_mean = pixel_stat['mean']
         # logger.debug("pixel value :{}".format(pixel_value))
-        lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, pixel_value)
-        lux_and_pixel_values[coordinate_label] = {'lux':lux_value, 'pixel':pixel_value}
+        lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, gray_pixel_mean)
+        lux_and_pixel_values[coordinate_label] = {
+            'lux':lux_value,
+            'gray_mean':gray_pixel_mean,
+            'h_mean': pixel_stat['h_mean'],
+            's_mean': pixel_stat['s_mean'],
+            'v_mean': pixel_stat['v_mean'],
+            'h_stddev': pixel_stat['h_stddev'],
+            's_stddev': pixel_stat['s_stddev'],
+            'v_stddev': pixel_stat['v_stddev'],
+        }
     return lux_and_pixel_values
 
 
-def handle_ip_cam_thread(label, ip_cam_url):
-    logger.debug("starting handle_ip_cam_thread for ip cam {} with url {}".format(label, ip_cam_url))
+def handle_ip_cam_thread(cam_label, ip_cam_url):
+    logger.debug("starting handle_ip_cam_thread for ip cam {} with url {}".format(cam_label, ip_cam_url))
     while 1:
         start_time = get_time_in_frac_seconds()
         vcap = cv2.VideoCapture(ip_cam_url)
@@ -131,10 +159,10 @@ def handle_ip_cam_thread(label, ip_cam_url):
 
             if ret:
                 timestamp = get_time_in_full_seconds()
-                lux_values = calculate_lux_values_from_image(label, frame)
-                write_lux_values_to_db(lux_values, label, timestamp)
+                lux_values = calculate_lux_values_from_image(cam_label, frame)
+                write_lux_values_to_db(lux_values, cam_label, timestamp)
                 if config.general.get("write_image"):
-                    image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, label))
+                    image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, cam_label))
                     logger.debug("writing image to {}".format(image_path))
                     cv2.imwrite(image_path, frame)
             else:
