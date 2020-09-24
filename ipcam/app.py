@@ -113,10 +113,10 @@ def get_lux_value_for_pixel_value(cam_label, patch_label, pixel_value):
     return ret_dict
 
 
-def get_pixel_value_for_patch(image, mask):
+def get_pixel_stats_for_patch(image, mask):
     # logger.debug("get_lux_value_for_patch with coordinates")
-    pixel_values = get_pixel_statics_for_bgr_image(image, mask)
-    return pixel_values['mean']
+    pixel_stat = get_pixel_statics_for_bgr_image(image, mask)
+    return pixel_stat
 
 
 def calculate_lux_values_from_image(ip_cam_label, image):
@@ -128,7 +128,7 @@ def calculate_lux_values_from_image(ip_cam_label, image):
     lux_and_pixel_values = {}
     for coordinate_label, points in coordinates.items():
         mask = get_mask(points, mask_size)
-        pixel_stat = get_pixel_value_for_patch(image, mask)
+        pixel_stat = get_pixel_stats_for_patch(image, mask)
         gray_pixel_mean = pixel_stat['mean']
         # logger.debug("pixel value :{}".format(pixel_value))
         lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, gray_pixel_mean)
