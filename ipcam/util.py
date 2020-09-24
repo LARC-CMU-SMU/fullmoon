@@ -38,12 +38,12 @@ def get_pixel_statics_for_bgr_image(m_image, m_mask):
         'mask_size': m_mask_size,
         'min': m_min,
         'max': m_max,
-        'h_mean':m_hsv_mean[0],
-        's_mean': m_hsv_mean[1],
-        'v_mean': m_hsv_mean[2],
-        'h_stddev': m_hsv_stddev[0],
-        's_stddev': m_hsv_stddev[1],
-        'v_stddev': m_hsv_stddev[2],
+        'h_mean':m_hsv_mean[0][0],
+        's_mean': m_hsv_mean[1][0],
+        'v_mean': m_hsv_mean[2][0],
+        'h_stddev': m_hsv_stddev[0][0],
+        's_stddev': m_hsv_stddev[1][0],
+        'v_stddev': m_hsv_stddev[2][0],
     }
 
 
