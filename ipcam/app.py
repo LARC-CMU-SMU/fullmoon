@@ -28,8 +28,8 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s: %(threadName)-12s: 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux_label,pixel,lux,h_mean,s_mean,v_mean,h_stddev,s_stddev,v_stddev) " \
-                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux_label,lux,gray_mean,gray_stddev,h_mean,s_mean,v_mean,h_stddev,s_stddev,v_stddev) " \
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 QUERY_FP_SELECT = "SELECT * FROM fp"
 
 SERVICE_NAME = "IPCAM"
@@ -58,6 +58,7 @@ def write_lux_values_to_db(lux_values, camera_label, timestamp):
     to_db = []
     for patch_label, lux_data in lux_values.items():
         m_gray_mean = lux_data.get('gray_mean')
+        m_gray_stddev = lux_data.get('gray_stddev')
         m_h_mean = lux_data.get('h_mean')
         m_s_mean = lux_data.get('s_mean')
         m_v_mean = lux_data.get('v_mean')
@@ -70,8 +71,9 @@ def write_lux_values_to_db(lux_values, camera_label, timestamp):
                           camera_label,
                           patch_label,
                           lux_label,
-                          m_gray_mean,
                           lux_val,
+                          m_gray_mean,
+                          m_gray_stddev,
                           m_h_mean,
                           m_s_mean,
                           m_v_mean,
@@ -133,8 +135,9 @@ def calculate_lux_values_from_image(ip_cam_label, image):
         # logger.debug("pixel value :{}".format(pixel_value))
         lux_value = get_lux_value_for_pixel_value(ip_cam_label, coordinate_label, gray_pixel_mean)
         lux_and_pixel_values[coordinate_label] = {
-            'lux':lux_value,
-            'gray_mean':gray_pixel_mean,
+            'lux': lux_value,
+            'gray_mean': gray_pixel_mean,
+            'gray_stddev': pixel_stat['stddev'],
             'h_mean': pixel_stat['h_mean'],
             's_mean': pixel_stat['s_mean'],
             'v_mean': pixel_stat['v_mean'],
