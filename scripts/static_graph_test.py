@@ -7,8 +7,8 @@ from scripts.util.data_util import convert_str_list_to_time
 # start_ts = 1600096083
 # end_ts = 1600101372
 
-start_ts = 1600133403
-end_ts = 1600136999
+start_ts = 1600964010
+end_ts = 1600971945
 
 TRUE_LUX_QUERY = "SELECT * FROM lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp;-- DESC LIMIT 1000".format(start_ts,end_ts)
 PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp; --ORDER BY timestamp DESC LIMIT 100000".format(start_ts,end_ts)

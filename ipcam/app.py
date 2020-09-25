@@ -52,34 +52,44 @@ def load_finger_prints():
     logger.info('done loading {} finger prints'.format(num_of_finger_prints))
 
 
-def write_lux_values_to_db(lux_values, camera_label, timestamp):
+def write_lux_values_to_db(pixel_stat, camera_label, timestamp):
     logger.debug("write_lux_values_to_db with ts {} cam_label {}".
                  format(timestamp, camera_label))
     to_db = []
-    for patch_label, lux_data in lux_values.items():
-        m_gray_mean = lux_data.get('gray_mean')
-        m_gray_stddev = lux_data.get('gray_stddev')
-        m_h_mean = lux_data.get('h_mean')
-        m_s_mean = lux_data.get('s_mean')
-        m_v_mean = lux_data.get('v_mean')
-        m_h_stddev = lux_data.get('h_stddev')
-        m_s_stddev = lux_data.get('s_stddev')
-        m_v_stddev = lux_data.get('v_stddev')
+    # preserve the pixel stats in DB for patch even there is no lux value calculated
+    for patch_label, lux_data in pixel_stat.items():
         lux_values = lux_data.get('lux')
+        if len(lux_values.keys()) == 0:
+            logger.debug("write_lux_values_to_db with cam_label [{}] patch_label [{}] when no lux value is calculated".
+                         format(camera_label, patch_label))
+            to_db.append((timestamp,
+                          camera_label,
+                          patch_label,
+                          None,
+                          None,
+                          lux_data.get('gray_mean'),
+                          lux_data.get('gray_stddev'),
+                          lux_data.get('h_mean'),
+                          lux_data.get('s_mean'),
+                          lux_data.get('v_mean'),
+                          lux_data.get('h_stddev'),
+                          lux_data.get('s_stddev'),
+                          lux_data.get('v_stddev'),
+                          ))
         for lux_label, lux_val in lux_values.items():
             to_db.append((timestamp,
                           camera_label,
                           patch_label,
                           lux_label,
                           lux_val,
-                          m_gray_mean,
-                          m_gray_stddev,
-                          m_h_mean,
-                          m_s_mean,
-                          m_v_mean,
-                          m_h_stddev,
-                          m_s_stddev,
-                          m_v_stddev,
+                          lux_data.get('gray_mean'),
+                          lux_data.get('gray_stddev'),
+                          lux_data.get('h_mean'),
+                          lux_data.get('s_mean'),
+                          lux_data.get('v_mean'),
+                          lux_data.get('h_stddev'),
+                          lux_data.get('s_stddev'),
+                          lux_data.get('v_stddev'),
                           ))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
