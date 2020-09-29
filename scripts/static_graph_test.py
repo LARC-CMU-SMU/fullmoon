@@ -4,23 +4,16 @@ import psycopg2.extras
 
 from scripts.util.data_util import convert_str_list_to_time
 
-# start_ts = 1600096083
-# end_ts = 1600101372
+START_TS = 1601063536
+END_TS = 1601071469
 
-start_ts = 1600964010
-end_ts = 1600971945
+SENSOR_LABEL = 'c'
+SENSOR_PIN = 'tsl_2'
+CAM_LABEL = 'b'
 
-TRUE_LUX_QUERY = "SELECT * FROM lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp;-- DESC LIMIT 1000".format(start_ts,end_ts)
-PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp; --ORDER BY timestamp DESC LIMIT 100000".format(start_ts,end_ts)
+TRUE_LUX_QUERY = "SELECT * FROM lux WHERE label=%s and pin =%s and timestamp > %s and timestamp < %s ORDER BY timestamp;"
+PSUDO_LUX_QUERY = "SELECT * FROM pixel_lux WHERE lux_label=%s and cam_label=%s and patch_label=%s and timestamp > %s and timestamp < %s ORDER BY timestamp;"
 FP_QUERY = "select * from fp where lux_label = %s order by pearson_corr desc limit 1"
-
-# X = deque(maxlen=20)
-# X.append(1)
-# Y = deque(maxlen=20)
-# Y.append(1)
-
-LUX_DATA={}
-P_LUX_DATA={}
 
 
 def get_highest_correlation(lux_label):
@@ -28,45 +21,26 @@ def get_highest_correlation(lux_label):
     return from_db[0]
 
 
-def get_true_lux():
-    ret={}
-    from_db=execute_sql_for_dict(TRUE_LUX_QUERY,[])
+def get_true_lux(label, pin, start_ts, end_ts):
+    ret ={}
+    from_db=execute_sql_for_dict(TRUE_LUX_QUERY,[label,pin,start_ts,end_ts])
     for row in from_db:
-        ts=row.get('timestamp')
-        label=row.get('label')
-        lux=row.get('lux')
-        pin=row.get('pin')
-        composit_key="{}_{}".format(label,pin)
-        if composit_key not in ret.keys():
-            ret[composit_key]={'ts':[],'lux':[]}
-        ret[composit_key]['ts'].append(ts)
-        ret[composit_key]['lux'].append(lux)
+        for key in row.keys():
+            if key not in ret.keys():
+                ret[key]=[]
+            ret[key].append(row[key])
     return ret
 
 
-def get_psudo_lux():
+def get_psudo_lux(comp_lux_label,cam_label,patch_label,start_ts,end_ts):
     ret = {}
-    from_db = execute_sql_for_dict(PSUDO_LUX_QUERY, [])
+    from_db = execute_sql_for_dict(PSUDO_LUX_QUERY, [comp_lux_label,cam_label,patch_label,start_ts,end_ts])
     for row in from_db:
-        ts = row.get('timestamp')
-        patch_label = row.get('patch_label')
-        lux_sensor_label = row.get('lux_label')
-        lux = row.get('lux')
-        pixel = row.get('pixel')
-        composit_key = "{}_{}".format(patch_label, lux_sensor_label)
-        if composit_key not in ret.keys():
-            ret[composit_key] = {'ts': [], 'lux': [], 'pixel':[]}
-        ret[composit_key]['ts'].append(ts)
-        ret[composit_key]['lux'].append(lux)
-        ret[composit_key]['pixel'].append(pixel)
-
+        for key in row.keys():
+            if key not in ret.keys():
+                ret[key] = []
+            ret[key].append(row[key])
     return ret
-
-
-def update_data():
-    global LUX_DATA, P_LUX_DATA
-    LUX_DATA=get_true_lux()
-    P_LUX_DATA=get_psudo_lux()
 
 
 def execute_sql_for_dict(query, values):
@@ -92,51 +66,35 @@ def execute_sql_for_dict(query, values):
         return ret
 
 
-def update_graph_scatter():
-    sensor='a_tsl_9'
-
-
-    update_data()
-    #
+def plot():
     fig = go.Figure()
-    #
-    labels = LUX_DATA.keys()
-    sorted(labels)
-    for i,label in enumerate(labels):
-        if not sensor in label:
-            continue
-        data = LUX_DATA.get(label)
-        fig.add_trace(go.Scatter(x=convert_str_list_to_time(data.get('ts')),
-                                 y=data.get('lux'),
-                                 mode='lines+markers',
-                                 name=label))
+    comp_key = "{}_{}".format(SENSOR_LABEL, SENSOR_PIN)
+    lux_data=get_true_lux(SENSOR_LABEL, SENSOR_PIN, START_TS, END_TS)
 
-    labels = P_LUX_DATA.keys()
-    sorted(labels)
-    for i, label in enumerate(labels):
-        if not sensor in label:
-            continue
-        highest_pcorr = get_highest_correlation(sensor)
-        highest_pcorr_patch_label = highest_pcorr.get('patch_label')
-        print(highest_pcorr)
-        # highest_pcorr_patch_label = "C3"
+    highest_pcorr = get_highest_correlation(comp_key)
+    patch_label = highest_pcorr.get('patch_label')
 
+    print(comp_key, patch_label, highest_pcorr.get('pearson_corr'))
 
-        if highest_pcorr_patch_label not in label:
-            continue
-        data = P_LUX_DATA.get(label)
-        fig.add_trace(go.Scatter(x=convert_str_list_to_time(data.get('ts')),
-                                 y=data.get('lux'),
-                                 mode='lines',
-                                 name="p_lux_{}".format(label)))
-        fig.add_trace(go.Scatter(x=convert_str_list_to_time(data.get('ts')),
-                                 y=data.get('pixel'),
-                                 mode='lines',
-                                 name="p_pixel_{}".format(label)))
+    p_lux_data = get_psudo_lux(comp_key, CAM_LABEL, patch_label, START_TS, END_TS)
+
+    fig.add_trace(go.Scatter(x=convert_str_list_to_time(lux_data.get('timestamp')),
+                             y=lux_data.get('lux'),
+                             mode='lines+markers',
+                             name='true lux'))
+
+    fig.add_trace(go.Scatter(x=convert_str_list_to_time(p_lux_data.get('timestamp')),
+                             y=p_lux_data.get('lux'),
+                             mode='lines',
+                             name="pseudo lux"))
+    fig.add_trace(go.Scatter(x=convert_str_list_to_time(p_lux_data.get('timestamp')),
+                             y=p_lux_data.get('gray_mean'),
+                             mode='lines',
+                             name="pixel"))
 
     fig.show()
 
 
 if __name__ == '__main__':
-    update_graph_scatter()
+    plot()
 
