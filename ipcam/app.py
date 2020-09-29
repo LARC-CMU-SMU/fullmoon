@@ -53,7 +53,7 @@ def load_finger_prints():
                                                  'x1': float(fp['x1']),
                                                  'x0': float(fp['x0']),
                                                  'pearson_corr': float(fp['pearson_corr'])}
-    logger.info('done loading {} finger prints for {} patches'.format(num_of_finger_prints), len(FINGER_PRINTS.keys()))
+    logger.info('done loading {} finger prints'.format(num_of_finger_prints))
 
 
 def write_lux_values_to_db(lux_data_and_pixel_stat_dict, camera_label, timestamp):
