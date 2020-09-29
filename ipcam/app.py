@@ -41,11 +41,15 @@ def load_finger_prints():
     fp_dict_list = db.execute_sql_for_dict(QUERY_FP_SELECT,[],logger)
     num_of_finger_prints = len(fp_dict_list)
     for fp in fp_dict_list:
+        cam_label = fp['cam_label']
         patch_label = fp['patch_label']
-        if not FINGER_PRINTS.get(patch_label):
-            FINGER_PRINTS[patch_label] = {}
         lux_label = fp['lux_label']
-        FINGER_PRINTS[patch_label][lux_label] = {'x2': float(fp['x2']),
+        if cam_label not in FINGER_PRINTS.keys():
+            FINGER_PRINTS[cam_label] = {}
+        if patch_label not in FINGER_PRINTS.get(cam_label).keys():
+            FINGER_PRINTS[cam_label][patch_label] = {}
+
+        FINGER_PRINTS[cam_label][patch_label][lux_label] = {'x2': float(fp['x2']),
                                                  'x1': float(fp['x1']),
                                                  'x0': float(fp['x0']),
                                                  'pearson_corr': float(fp['pearson_corr'])}
@@ -105,10 +109,14 @@ def get_time_in_frac_seconds():
 def get_lux_values_for_pixel_value(cam_label, patch_label, pixel_value):
     # logger.debug("get_lux_value_for_pixel_value cam_label {} patch_label {}".format(
     #     cam_label, patch_label))
-    fp = FINGER_PRINTS.get(patch_label)
     ret_dict = {}
+    cam_fp = FINGER_PRINTS.get(cam_label)
+    if not cam_fp:
+        logger.error("no finger print found for camera {}".format(cam_label))
+        return ret_dict
+    fp = cam_fp.get(patch_label)
     if not fp:
-        logger.error("no finger print found for {}".format(patch_label))
+        logger.error("no finger print found for patch {}".format(patch_label))
         return ret_dict
     for lux_label, coefficient_data in fp.items():
         pearson_corr = coefficient_data.get('pearson_corr')

@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 
 CSV_DIR = "/Users/kasun/working_data/sep26/"
 OUT_CSV = '{}correlation.csv'.format(CSV_DIR)
+CAM_LABEL = 'b'
 
 START_TS = 1601040358
 END_TS = 1601048295
@@ -19,14 +20,14 @@ END_TS = 1601048295
 # (this is the reason why every cat is gray in the dark)
 V_CHANNEL_THRESHOLD = 20
 
-LUX_QUERY = "SELECT * FROM lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp".format(START_TS, END_TS)
-PIXEL_QUERY = "SELECT * FROM pixel_lux WHERE timestamp > {} and timestamp < {} ORDER BY timestamp".format(START_TS, END_TS)
+LUX_QUERY = "SELECT * FROM lux WHERE timestamp > %s and timestamp < %s ORDER BY timestamp"
+PIXEL_QUERY = "SELECT * FROM pixel_lux WHERE cam_label=%s and timestamp > %s and timestamp < %s ORDER BY timestamp"
 
 
 def get_lux_from_db():
     print("loading lux values")
     ret={'timestamp':[], 'label':[], 'lux':[], 'pin':[]}
-    from_db=execute_sql_for_dict(LUX_QUERY, [])
+    from_db=execute_sql_for_dict(LUX_QUERY, [START_TS, END_TS])
     for row in from_db:
         ret.get('timestamp').append(row.get('timestamp'))
         ret.get('label').append(row.get('label'))
@@ -38,7 +39,7 @@ def get_lux_from_db():
 def get_pixel_from_db():
     print("loading pixel values")
     ret={'timestamp':[],'cam_label':[],'patch_label':[],'pixel':[],'h_mean':[],'s_mean':[],'v_mean':[]}
-    from_db=execute_sql_for_dict(PIXEL_QUERY, [])
+    from_db=execute_sql_for_dict(PIXEL_QUERY, [CAM_LABEL, START_TS, END_TS])
     for row in from_db:
         ret.get('timestamp').append(row.get('timestamp'))
         ret.get('cam_label').append(row.get('cam_label'))
@@ -120,6 +121,7 @@ for pixel_label in processed_pixel.keys():  # iterate over the patches
             v_min= hsv_values.get('v_min')
             v_max= hsv_values.get('v_max')
             current_dict = {
+                'cam_label':CAM_LABEL,
                 'patch_label': pixel_label,
                 'lux_label': lux_label,
                 'tuple_len': len(ts_list),
@@ -135,22 +137,6 @@ for pixel_label in processed_pixel.keys():  # iterate over the patches
                 'v_max':v_max
             }
             to_csv_dict_list.append(current_dict)
-
-            # if corr > .97:
-            #     calc_lux_list=[fit[0] * x * x + fit[1] * x + fit[2] for x in pixel_list]
-            #     import matplotlib.pyplot as plt
-            #     fig,(a1,a2) = plt.subplots(1,2)
-            #     a1.scatter(pixel_list, lux_list)
-            #     sorted_pixel_list_for_plot = pixel_list.copy()
-            #     sorted_pixel_list_for_plot.sort()
-            #     a1.plot(sorted_pixel_list_for_plot,
-            #              fit[0] * sorted_pixel_list_for_plot * sorted_pixel_list_for_plot + fit[1] * sorted_pixel_list_for_plot + fit[2])
-            #     a2.scatter(lux_list,calc_lux_list)
-            #     a2.plot(lux_list,lux_list)
-            #     plt.title("pixel {} vs lux {}".format(pixel_label, lux_label))
-            #     plt.show()
-            #
-            #     print("corr is higher than .97")
         else:
             print("not enough data points {},{}".format(pixel_label, lux_label))
 
