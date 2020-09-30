@@ -37,6 +37,22 @@ FINGER_PRINTS = {}
 PEARSON_CORR_THRESH = 0.8
 
 
+# load the finger prints from db to FINGER_PRINTS
+# structure
+#   {cam_label_1:
+#       {patch_label_1:
+#           {lux_label_1:
+#               {
+#               x2:..,
+#               x1:..,
+#               x0:..,
+#               pearson_corr:..
+#                }
+#           },
+#       },
+#   cam_label_2: ....
+#    }
+
 def load_finger_prints():
     fp_dict_list = db.execute_sql_for_dict(QUERY_FP_SELECT,[],logger)
     num_of_finger_prints = len(fp_dict_list)
@@ -44,8 +60,10 @@ def load_finger_prints():
         cam_label = fp['cam_label']
         patch_label = fp['patch_label']
         lux_label = fp['lux_label']
+
         if cam_label not in FINGER_PRINTS.keys():
             FINGER_PRINTS[cam_label] = {}
+
         if patch_label not in FINGER_PRINTS.get(cam_label).keys():
             FINGER_PRINTS[cam_label][patch_label] = {}
 
@@ -53,6 +71,7 @@ def load_finger_prints():
                                                  'x1': float(fp['x1']),
                                                  'x0': float(fp['x0']),
                                                  'pearson_corr': float(fp['pearson_corr'])}
+
     logger.info('done loading {} finger prints'.format(num_of_finger_prints))
 
 
@@ -64,6 +83,8 @@ def write_lux_values_to_db(lux_data_and_pixel_stat_dict, camera_label, timestamp
     for patch_label, lux_data_and_pixel_stat in lux_data_and_pixel_stat_dict.items():
         lux_values = lux_data_and_pixel_stat.get('lux')
         if len(lux_values.keys()) == 0:
+            # this happens because for this patch there are not even 1 correlation
+            # (above min threshold) with a lux sensor
             logger.debug("write_lux_values_to_db with cam_label [{}] patch_label [{}] when no lux value is calculated".
                          format(camera_label, patch_label))
             to_db.append((timestamp,
@@ -80,21 +101,24 @@ def write_lux_values_to_db(lux_data_and_pixel_stat_dict, camera_label, timestamp
                           lux_data_and_pixel_stat.get('s_stddev'),
                           lux_data_and_pixel_stat.get('v_stddev'),
                           ))
-        for lux_label, lux_val in lux_values.items():
-            to_db.append((timestamp,
-                          camera_label,
-                          patch_label,
-                          lux_label,
-                          lux_val,
-                          lux_data_and_pixel_stat.get('gray_mean'),
-                          lux_data_and_pixel_stat.get('gray_stddev'),
-                          lux_data_and_pixel_stat.get('h_mean'),
-                          lux_data_and_pixel_stat.get('s_mean'),
-                          lux_data_and_pixel_stat.get('v_mean'),
-                          lux_data_and_pixel_stat.get('h_stddev'),
-                          lux_data_and_pixel_stat.get('s_stddev'),
-                          lux_data_and_pixel_stat.get('v_stddev'),
-                          ))
+        else:
+            # this else is just for readability, if there is no elements in `lux_values` dict,
+            # it won't execute below code even there wasn't a else
+            for lux_label, lux_val in lux_values.items():
+                to_db.append((timestamp,
+                              camera_label,
+                              patch_label,
+                              lux_label,
+                              lux_val,
+                              lux_data_and_pixel_stat.get('gray_mean'),
+                              lux_data_and_pixel_stat.get('gray_stddev'),
+                              lux_data_and_pixel_stat.get('h_mean'),
+                              lux_data_and_pixel_stat.get('s_mean'),
+                              lux_data_and_pixel_stat.get('v_mean'),
+                              lux_data_and_pixel_stat.get('h_stddev'),
+                              lux_data_and_pixel_stat.get('s_stddev'),
+                              lux_data_and_pixel_stat.get('v_stddev'),
+                              ))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
 
 
@@ -107,41 +131,38 @@ def get_time_in_frac_seconds():
 
 
 def get_lux_values_for_pixel_value(cam_label, patch_label, pixel_value):
-    # logger.debug("get_lux_value_for_pixel_value cam_label {} patch_label {}".format(
-    #     cam_label, patch_label))
     ret_dict = {}
     cam_fp = FINGER_PRINTS.get(cam_label)
     if not cam_fp:
         logger.error("no finger print found for camera {}".format(cam_label))
         return ret_dict
+
     fp = cam_fp.get(patch_label)
     if not fp:
         logger.error("no finger print found for patch {}".format(patch_label))
         return ret_dict
+
     for lux_label, coefficient_data in fp.items():
         pearson_corr = coefficient_data.get('pearson_corr')
-        # logger.debug("pearson corr {}".format(pearson_corr))
         if pearson_corr > PEARSON_CORR_THRESH:
             x2 = coefficient_data.get('x2')
             x1 = coefficient_data.get('x1')
             x0 = coefficient_data.get('x0')
-            calc_lux_val = (pixel_value*pixel_value*x2) + (pixel_value*x1) + x0
-            # logger.debug("pixel val {} x2 {} x1 {} x0 {} lux label {} calc lux val {}".format(
-            #     pixel_value, x2, x1, x0, lux_label, calc_lux_val))
 
+            calc_lux_val = (pixel_value*pixel_value*x2) + (pixel_value*x1) + x0
             ret_dict[lux_label] = calc_lux_val
+
     return ret_dict
 
 
 def get_pixel_stats_for_patch(image, mask):
-    # logger.debug("get_lux_value_for_patch with coordinates")
     pixel_stat = get_pixel_statics_for_bgr_image(image, mask)
     return pixel_stat
 
 
 def calculate_lux_values_from_image(ip_cam_label, image):
     logger.debug("calculate_lux_values_from_image with label {}".format(ip_cam_label))
-    # todo : load this at the beginning and save it in memory
+    # todo : load this at the beginning and save it in memory(make sure it supports the multicamers scenario)
     patch_coordinates_file = config.IP_CAM_DEVICES.get(ip_cam_label).get('patch_coordinate_file')
     coordinates = get_coords_from_labelimg_xml(patch_coordinates_file)
     mask_size = image.shape[:2]
@@ -150,7 +171,6 @@ def calculate_lux_values_from_image(ip_cam_label, image):
         mask = get_mask(points, mask_size)
         pixel_stat = get_pixel_stats_for_patch(image, mask)
         gray_pixel_mean = pixel_stat['mean']
-        # logger.debug("pixel value :{}".format(pixel_value))
         lux_values = get_lux_values_for_pixel_value(ip_cam_label, coordinate_label, gray_pixel_mean)
         lux_and_pixel_stats[coordinate_label] = {
             'lux': lux_values,
