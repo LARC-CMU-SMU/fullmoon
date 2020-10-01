@@ -40,7 +40,7 @@ DC_THRESHOLD = 2 * 10000
 DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
 MIN_LUX = 10
-COMFORT_LUX = 50
+COMFORT_LUX = 25
 
 
 def set_dc_in_device(url, pin, dc, freq):
@@ -140,7 +140,8 @@ def get_dc_vector(deficit_lux_vector, weight_matrix):
     # dc_vector = {}
     # for section, lux_value in deficit_lux_vector.items():
     #     dc_vector[section] = lux_value * 10000
-    dc_vector = get_optimized_dc_vector(weight_matrix, deficit_lux_vector, logger)
+    dc_vector, sum = get_optimized_dc_vector(weight_matrix, deficit_lux_vector, logger)
+    logger.debug("get_dc_vector[{}] with cost [{}]".format(dc_vector, sum))
     return dc_vector
 
 
