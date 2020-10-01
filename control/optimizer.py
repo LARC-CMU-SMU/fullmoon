@@ -75,6 +75,7 @@ def get_labeled_dc_vector(dc_vector, labels):
 
 
 def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
+    labeled_dc_vector = None
     logger.debug("calculating most economical dc vector for lux dict {} and weight matrix {}".format(lux_dict, weight_matrix))
     sorted(lux_dict)
     lux_values_vector = list(lux_dict.values())
@@ -82,9 +83,10 @@ def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
     logger.debug("lux dict transformed to vector[{}] sorted by labels [{}]".format(lux_values_vector, lux_key_list))
     dc_vector_list = solve_undetermined_system_of_linear_equations(weight_matrix, lux_values_vector, 10000)
     best_dc_vector, dc_sum = get_least_costly_dc_vector(dc_vector_list)
-    logger.debug("best dc vector [{}]".format(best_dc_vector))
-    labeled_dc_vector = get_labeled_dc_vector(best_dc_vector, lux_key_list)
-    logger.debug("least costly dc vector {}".format(labeled_dc_vector))
-    # dry_run_results = get_dry_run_results_for_dc_vector(weight_matrix, labeled_dc_vector)
-    # logger.debug("dry run results {}".format(dry_run_results))
+    if best_dc_vector:
+        logger.debug("best dc vector [{}]".format(best_dc_vector))
+        labeled_dc_vector = get_labeled_dc_vector(best_dc_vector, lux_key_list)
+        logger.debug("least costly dc vector {}".format(labeled_dc_vector))
+        # dry_run_results = get_dry_run_results_for_dc_vector(weight_matrix, labeled_dc_vector)
+        # logger.debug("dry run results {}".format(dry_run_results))
     return labeled_dc_vector, dc_sum

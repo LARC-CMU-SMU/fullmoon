@@ -162,7 +162,9 @@ def calculate_optimized_lux_thread():
     logger.debug("starting calculate_optimized_brightness thread")
     global OPTIMIZED_DC
     while 1:
-        OPTIMIZED_DC = get_calculated_optimized_dc()
+        calculated_dc_vector= get_calculated_optimized_dc()
+        if calculated_dc_vector:  # only update if system returned a optimized dc vector
+            OPTIMIZED_DC = calculated_dc_vector
         sleep_time = config.general.get("calculate_optimized_lux_thread_sleep_time")
         time.sleep(sleep_time)
 
@@ -210,6 +212,8 @@ def set_optimized_dc_in_device():
     while 1:
         old_dc_dict = get_dc_from_db()
         for section, old_dc in old_dc_dict.items():
+            if not OPTIMIZED_DC:  # fail safe
+                continue
             new_dc = OPTIMIZED_DC.get(section)
             logger.debug("new dc {}, old dc {} delta dc {}"
                          .format(new_dc, old_dc, DELTA_DC))
