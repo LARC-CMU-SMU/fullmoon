@@ -189,7 +189,7 @@ def get_occupancy_from_db():
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.info("occupancy : a {}, b {}, c {}, d {}".format(a, b, c, d))
+    # logger.info("occupancy : a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
