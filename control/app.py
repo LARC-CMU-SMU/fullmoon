@@ -37,6 +37,7 @@ DELTA_DC = 10 * 10000
 WEIGHT_MATRIX = None
 OPTIMIZED_DC = None
 DC_THRESHOLD = 2 * 10000
+LUX_THRESHOLD = 5
 DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
 MIN_LUX = 10
@@ -130,7 +131,10 @@ def get_should_be_lux_vector_for_occupancy_vector(occupancy_vector):
 def get_deficit_lux_vector(should_be_lux, current_lux):
     deficit_lux_vector = {}
     for section in should_be_lux.keys():
-        deficit_lux_vector[section] = should_be_lux[section] - current_lux[section]
+        diff = should_be_lux[section] - current_lux[section]
+        if abs(diff) < LUX_THRESHOLD:
+            diff = 0
+        deficit_lux_vector[section] = diff
     return deficit_lux_vector
 
 

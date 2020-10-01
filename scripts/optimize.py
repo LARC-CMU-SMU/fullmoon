@@ -186,7 +186,7 @@ def check(weight_matrix, dc_vector):
 
 # current_lux = get_lux_from_db()
 current_lux = {'a':0,'b':0,'c':0,'d':0}
-LUX_TO_BE={'a':0, 'b':0, 'c':0, 'd':10}
+LUX_TO_BE={'a':25, 'b':25, 'c':25, 'd':25}
 
 def_lux = (get_the_deficit_lux(current_lux))
 sorted(def_lux)
