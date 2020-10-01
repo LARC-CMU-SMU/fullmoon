@@ -219,14 +219,16 @@ def set_optimized_dc_in_device():
             logger.debug("new dc {}, old dc {} delta dc {}"
                          .format(new_dc, old_dc, DELTA_DC))
             if abs(new_dc - old_dc) > DC_THRESHOLD:
-                if new_dc > old_dc:
-                    logger.info("old dc {} -> new dc {} delta dc +{}"
-                                 .format(old_dc, new_dc, DELTA_DC))
-                    set_dc_in_section(section, old_dc + DELTA_DC)
-                if new_dc < old_dc:
-                    logger.info("old dc {} -> new dc {} delta dc -{}"
-                                 .format(old_dc, new_dc, DELTA_DC))
-                    set_dc_in_section(section, old_dc - DELTA_DC)
+                #  bypass the gradual increase for now.
+                set_dc_in_section(section, new_dc)
+            #     if new_dc > old_dc:
+            #         logger.info("old dc {} -> new dc {} delta dc +{}"
+            #                      .format(old_dc, new_dc, DELTA_DC))
+            #         set_dc_in_section(section, old_dc + DELTA_DC)
+            #     if new_dc < old_dc:
+            #         logger.info("old dc {} -> new dc {} delta dc -{}"
+            #                      .format(old_dc, new_dc, DELTA_DC))
+            #         set_dc_in_section(section, old_dc - DELTA_DC)
             else:
                 logger.debug("dc delta {} < DC_THRESHOLD {}, not doing anything"
                              .format((new_dc - old_dc), DELTA_DC))
