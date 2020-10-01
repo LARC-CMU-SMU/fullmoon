@@ -30,7 +30,8 @@ def solve_undetermined_system_of_linear_equations(coefficient_matrix, y_vector, 
             [0, 14, 0, 0, 0, 12],
             [0, 0, 31, 9, 6, 4],
             [0, 0, 8, 35, 0, 11])
-    b = np.array(y_vector)
+    # todo: use the coefficient_matrix passed to method
+    b = np.array([0,0,20,0])
     # Find an initial solution using `np.linalg.lstsq`
     x_lstsq = np.linalg.lstsq(A, b, rcond=None)[0]
 
