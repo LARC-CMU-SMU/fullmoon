@@ -3,7 +3,7 @@ import config
 
 
 def execute_sql(query, values, logger, does_return_value=False):
-    logger.debug("executing query {} with values {}".format(query, values))
+    # logger.debug("executing query {} with values {}".format(query, values))
     con = None
     res = None
     try:

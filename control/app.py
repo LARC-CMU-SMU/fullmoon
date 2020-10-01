@@ -172,7 +172,7 @@ def calculate_optimized_lux_thread():
 
 def get_current_lux_from_db():
     # todo : optimize below code
-    logger.debug("querying the lux from db")
+    # logger.debug("querying the lux from db")
     query = "SELECT lux FROM lux WHERE label=%s AND pin=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a', 'tsl_0'), logger, True)[0][0]
     b = db.execute_sql(query, ('b', 'tsl_2'), logger, True)[0][0]
@@ -184,7 +184,7 @@ def get_current_lux_from_db():
 
 def get_occupancy_from_db():
     # todo : optimize
-    logger.debug("querying the occupancy from db")
+    # logger.debug("querying the occupancy from db")
     query = "SELECT occupancy FROM occupancy WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
@@ -196,7 +196,7 @@ def get_occupancy_from_db():
 
 def get_dc_from_db():
     # todo : optimize
-    logger.debug("querying the dc from db")
+    # logger.debug("querying the dc from db")
     query = "SELECT dc FROM dc WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
