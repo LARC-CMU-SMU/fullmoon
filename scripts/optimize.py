@@ -167,28 +167,53 @@ def get_dc_for_deficit_lux2(b):
     # print(ret)
 
 
-def get_the_deficit_lux(current_lux):
+def get_the_deficit_lux(current_lux, already_added_lux, future_lux):
     ret={}
     # print('current lux', current_lux)
-    for key in LUX_TO_BE.keys():
-        ret[key]=LUX_TO_BE[key]-current_lux[key]
+    for key in future_lux.keys():
+        ret[key]= future_lux[key] - current_lux[key] + already_added_lux[key]
     return ret
 
 
 def check(weight_matrix, dc_vector):
+    ret = {}
     for cubical_sensor, weights in weight_matrix.items():
         tot_lux=0
         for light_source,val in weights.items():
             lux=val*dc_vector.get(light_source)/100
             tot_lux+=lux
-        print(cubical_sensor, tot_lux)
+        ret[cubical_sensor] = tot_lux
+    return ret
 
 
-# current_lux = get_lux_from_db()
-current_lux = {'a':0,'b':0,'c':0,'d':0}
-LUX_TO_BE={'a':25, 'b':25, 'c':25, 'd':25}
+def add_dicts(exisisting_lux, adding_lux):
+    ret = {}
+    for cubical_sensor, existing_lux in exisisting_lux.items():
+        ret[cubical_sensor] = existing_lux+adding_lux[cubical_sensor]
+    return ret
 
-def_lux = (get_the_deficit_lux(current_lux))
+
+# def get_artificialy_added_lux(weight_matrix, dc_vector)
+
+
+future_lux={'a':25, 'b':25, 'c':25, 'd':25}
+print("future lux", future_lux)
+
+current_lux = {'a':10,'b':10,'c':10,'d':10}
+print("current lux", current_lux)
+
+existing_dc={'a':5, 'b':0, 'c':5, 'd':0, 'e':0,'f':0}
+
+already_added_lux =check(WM,existing_dc)
+print("already added lux", already_added_lux)
+
+
+
+def_lux = get_the_deficit_lux(current_lux, already_added_lux, future_lux)
+
+print("lux deficit", def_lux)
+
+
 sorted(def_lux)
 def_lux_list=list(def_lux.values())
 # print(def_lux_list)
@@ -199,9 +224,15 @@ print(dc_sum, list(def_lux.values()),"->", dc)
 validated_dc = get_validated_dc(dc)
 DC_TO_SET={'a':validated_dc[0], 'b':validated_dc[1], 'c':validated_dc[2], 'd':validated_dc[3], 'e':validated_dc[4],'f':validated_dc[5]}
 
-print(DC_TO_SET)
+print("dc to set", DC_TO_SET)
+additional_lux_to_be_setted=check(WM,DC_TO_SET)
+print("additional lux to be set", additional_lux_to_be_setted)
 
-check(WM,DC_TO_SET)
+final_lux=add_dicts(additional_lux_to_be_setted, current_lux)
+print("after setting lux will be", final_lux)
+
+
+
 
 
 

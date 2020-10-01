@@ -125,13 +125,24 @@ def get_should_be_lux_vector_for_occupancy_vector(occupancy_vector):
     return optimum_lux_vector
 
 
+def get_already_added_lux(weight_matrix, dc_vector):
+    ret = {}
+    for cubical_sensor, weights in weight_matrix.items():
+        tot_lux=0
+        for light_source,val in weights.items():
+            lux=val*dc_vector.get(light_source)/100
+            tot_lux+=lux
+        ret[cubical_sensor] = tot_lux
+    return ret
+
+
 # returns the change of lux levels system should make
 # ie if the section has 50 lux now and the should be lux is 60, deficit lux is 10
 # can be positive or negative
-def get_deficit_lux_vector(should_be_lux, current_lux):
+def get_deficit_lux_vector(should_be_lux, current_lux, already_added_lux):
     deficit_lux_vector = {}
     for section in should_be_lux.keys():
-        diff = should_be_lux[section] - current_lux[section]
+        diff = should_be_lux[section] - current_lux[section] + already_added_lux[section]
         if abs(diff) < LUX_THRESHOLD:
             diff = 0
         deficit_lux_vector[section] = diff
@@ -155,7 +166,10 @@ def get_calculated_optimized_dc():
     logger.info("optimum_lux_vector {}".format(optimum_lux_vector))
     current_lux_vector = get_current_lux_from_db()
     logger.info("current_lux_vector {}".format(current_lux_vector))
-    deficit_lux_vector = get_deficit_lux_vector(optimum_lux_vector, current_lux_vector)
+    current_dc_vector= get_dc_from_db()
+    already_added_lux = get_already_added_lux(WEIGHT_MATRIX, current_dc_vector)
+    logger.info("already added lux {}".format(already_added_lux))
+    deficit_lux_vector = get_deficit_lux_vector(optimum_lux_vector, current_lux_vector, already_added_lux)
     logger.info("deficit_lux_vector {}".format(deficit_lux_vector))
     dc_vector = get_dc_vector(deficit_lux_vector, WEIGHT_MATRIX)
     logger.info("dc_vector {}".format(dc_vector))
