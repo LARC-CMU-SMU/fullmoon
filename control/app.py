@@ -147,7 +147,7 @@ def get_dc_vector(deficit_lux_vector, weight_matrix):
 
 def get_calculated_optimized_dc():
     occupancy_vector = get_occupancy_from_db()
-    logger.info("occupancy_vector {}".format(occupancy_vector))
+    # logger.info("occupancy_vector {}".format(occupancy_vector))
     optimum_lux_vector = get_should_be_lux_vector_for_occupancy_vector(occupancy_vector)
     logger.info("optimum_lux_vector {}".format(optimum_lux_vector))
     current_lux_vector = get_current_lux_from_db()

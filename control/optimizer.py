@@ -69,8 +69,13 @@ def get_dry_run_results_for_dc_vector(weight_matrix, dc_vector):
 
 def get_labeled_and_upscaled_dc_vector(dc_vector, labels):
     ret = {}
-    for i, label in enumerate(labels):
-        ret[label] = dc_vector[i]*1000000
+    # todo :optimize below
+    ret['a'] = dc_vector[0]*1000000
+    ret['b'] = dc_vector[1] * 1000000
+    ret['c'] = dc_vector[2] * 1000000
+    ret['d'] = dc_vector[3] * 1000000
+    ret['e'] = dc_vector[4] * 1000000
+    ret['f'] = dc_vector[5] * 1000000
     return ret
 
 
@@ -84,7 +89,7 @@ def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
     dc_vector_list = solve_undetermined_system_of_linear_equations(weight_matrix, lux_values_vector, 10000)
     best_dc_vector, dc_sum = get_least_costly_dc_vector(dc_vector_list)
     if best_dc_vector is not None:
-        logger.debug("best dc vector [{}]".format(best_dc_vector))
+        # logger.debug("best dc vector [{}]".format(best_dc_vector))
         labeled_dc_vector = get_labeled_and_upscaled_dc_vector(best_dc_vector, lux_key_list)
         logger.debug("least costly dc vector {}".format(labeled_dc_vector))
         # dry_run_results = get_dry_run_results_for_dc_vector(weight_matrix, labeled_dc_vector)
