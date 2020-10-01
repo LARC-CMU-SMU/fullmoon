@@ -171,10 +171,10 @@ def get_current_lux_from_db():
     # todo : optimize below code
     logger.debug("querying the lux from db")
     query = "SELECT lux FROM lux WHERE label=%s AND pin=%s ORDER BY timestamp DESC LIMIT 1"
-    a = db.execute_sql(query, ('a', 'tsl_9'), logger, True)[0][0]
+    a = db.execute_sql(query, ('a', 'tsl_0'), logger, True)[0][0]
     b = db.execute_sql(query, ('b', 'tsl_2'), logger, True)[0][0]
-    c = db.execute_sql(query, ('c', 'tsl_9'), logger, True)[0][0]
-    d = db.execute_sql(query, ('d', 'tsl_9'), logger, True)[0][0]
+    c = db.execute_sql(query, ('c', 'tsl_0'), logger, True)[0][0]
+    d = db.execute_sql(query, ('d', 'tsl_0'), logger, True)[0][0]
     logger.info("lux :a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
@@ -199,8 +199,10 @@ def get_dc_from_db():
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.info("dc : a {}, b {}, c {}, d {}".format(a, b, c, d))
-    return {'a': a, 'b': b, 'c': c, 'd': d}
+    e = db.execute_sql(query, ('e',), logger, True)[0][0]
+    f = db.execute_sql(query, ('f',), logger, True)[0][0]
+    logger.info("dc : a {}, b {}, c {}, d {}, e {}, f {}".format(a, b, c, d, e, f))
+    return {'a': a, 'b': b, 'c': c, 'd': d, 'e':e, 'f':f}
 
 
 def set_optimized_dc_in_device():
