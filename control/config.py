@@ -16,7 +16,7 @@ postgres = dict(
 
 general = dict(
     log_file_name="docker_mount/logs/control.log",
-    log_level=log_levels["info"],
+    log_level=log_levels["debug"],
     max_log_size=1024 ** 3,  # 1GB
     max_log_file_count=3,
     wait_time_for_db=10,
