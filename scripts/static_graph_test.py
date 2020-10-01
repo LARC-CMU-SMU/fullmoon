@@ -2,15 +2,16 @@ import plotly.graph_objs as go
 import psycopg2
 import psycopg2.extras
 
+from scripts.m_util import execute_sql_for_dict
 from scripts.util.data_util import convert_str_list_to_time
 
-START_TS = 1601417642
-END_TS = 1601417642 + (3600*4)
-# START_TS = 1601063536
-# END_TS = 1601071469
+# START_TS = 1601417642
+# END_TS = 1601417642 + (3600*4)
+START_TS = 1601063536
+END_TS = 1601071469
 
-SENSOR_LABEL = 'a'
-SENSOR_PIN = 'tsl_2'
+SENSOR_LABEL = 'f'
+SENSOR_PIN = 'tsl_1'
 CAM_LABEL = 'b'
 
 TRUE_LUX_QUERY = "SELECT * FROM lux WHERE label=%s and pin =%s and timestamp > %s and timestamp < %s ORDER BY timestamp;"
@@ -45,27 +46,27 @@ def get_psudo_lux(comp_lux_label,cam_label,patch_label,start_ts,end_ts):
     return ret
 
 
-def execute_sql_for_dict(query, values):
-    con = None
-    ret = None
-    try:
-        con = psycopg2.connect(database="fullmoon",
-                               user="fullmoon",
-                               password="fullmoon",
-                               host="10.4.8.225",
-                               port=5432)
-        cursor = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute(query, values)
-        inter_ret = cursor.fetchall()
-        ret = [dict(row) for row in inter_ret]
-    except Exception as e:
-        print(str(e))
-        if con:
-            con.rollback()
-    finally:
-        if con:
-            con.close()
-        return ret
+# def execute_sql_for_dict(query, values):
+#     con = None
+#     ret = None
+#     try:
+#         con = psycopg2.connect(database="fullmoon",
+#                                user="fullmoon",
+#                                password="fullmoon",
+#                                host="10.4.8.225",
+#                                port=5432)
+#         cursor = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+#         cursor.execute(query, values)
+#         inter_ret = cursor.fetchall()
+#         ret = [dict(row) for row in inter_ret]
+#     except Exception as e:
+#         print(str(e))
+#         if con:
+#             con.rollback()
+#     finally:
+#         if con:
+#             con.close()
+#         return ret
 
 
 def plot():

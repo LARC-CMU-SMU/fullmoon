@@ -9,6 +9,8 @@ import requests
 import config
 import db
 
+from control.optimizer import get_optimized_dc_vector
+
 logger = logging.getLogger(__name__)
 
 log_level = logging.getLevelName(config.general['log_level'])
@@ -60,11 +62,11 @@ def get_time():
 
 
 def get_weight_matrix_from_db():
-    # todo : implement the actual feature
-    return [[.9, .4, .3, .1],
-            [.4, .9, .3, .3],
-            [.4, .2, .8, .4],
-            [.2, .3, .4, .7]]
+    # todo : load the matrix from db
+    return [[53, 0, 0, 0, 10, 2],
+            [0, 14, 0, 0, 0, 12],
+            [0, 0, 31, 9, 6, 4],
+            [0, 0, 8, 35, 0, 11]]
 
 
 def init_weight_matrix():
@@ -134,10 +136,10 @@ def get_deficit_lux_vector(should_be_lux, current_lux):
 
 # returns the optimum dc values that should to be set to fill the deficit lux levels
 def get_dc_vector(deficit_lux_vector, weight_matrix):
-    # todo : use the weight matrix to calculate the correct dc value
-    dc_vector = {}
-    for section, lux_value in deficit_lux_vector.items():
-        dc_vector[section] = lux_value * 10000
+    # dc_vector = {}
+    # for section, lux_value in deficit_lux_vector.items():
+    #     dc_vector[section] = lux_value * 10000
+    dc_vector = get_optimized_dc_vector(weight_matrix, deficit_lux_vector, logger)
     return dc_vector
 
 
@@ -229,6 +231,8 @@ def main():
     wait_time_for_db = config.general["wait_time_for_db"]
     logger.info("Waiting [%s] seconds for DB to come up", wait_time_for_db)
     time.sleep(wait_time_for_db)
+    init_weight_matrix()
+    logger.info("weight_matrix_loaded")
     threading.Thread(target=handle_newly_occupied).start()
     threading.Thread(target=calculate_optimized_lux_thread).start()
     time.sleep(config.general['wait_between_optimize_and_control'])
