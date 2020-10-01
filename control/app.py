@@ -267,6 +267,7 @@ def main():
     time.sleep(wait_time_for_db)
     init_weight_matrix()
     logger.info("weight_matrix_loaded")
+    # todo : uncomment this
     # threading.Thread(target=handle_newly_occupied).start()
     threading.Thread(target=calculate_optimized_lux_thread).start()
     time.sleep(config.general['wait_between_optimize_and_control'])
