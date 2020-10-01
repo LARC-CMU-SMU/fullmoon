@@ -9,7 +9,7 @@ import requests
 import config
 import db
 
-from control.optimizer import get_optimized_dc_vector
+from optimizer import get_optimized_dc_vector
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ def validate_dc(dc):
 
 def set_dc_in_section(section, dc):
     logger.debug("setting lux {} in section {}".format(dc, section))
+    return
     dc = validate_dc(dc)
     url = "{}dc".format(config.DEVICES.get(section).get('url'))
     dc_pin = config.DEVICES.get(section).get('dc_pin')
