@@ -83,7 +83,7 @@ def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
     logger.debug("lux dict transformed to vector[{}] sorted by labels [{}]".format(lux_values_vector, lux_key_list))
     dc_vector_list = solve_undetermined_system_of_linear_equations(weight_matrix, lux_values_vector, 10000)
     best_dc_vector, dc_sum = get_least_costly_dc_vector(dc_vector_list)
-    if best_dc_vector:
+    if best_dc_vector is not None:
         logger.debug("best dc vector [{}]".format(best_dc_vector))
         labeled_dc_vector = get_labeled_dc_vector(best_dc_vector, lux_key_list)
         logger.debug("least costly dc vector {}".format(labeled_dc_vector))
