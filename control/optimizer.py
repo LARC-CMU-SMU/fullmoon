@@ -23,6 +23,8 @@ def is_all_elements_are_less_than_one(m_list):
 
 def solve_undetermined_system_of_linear_equations(coefficient_matrix, y_vector, num_of_results=10000):
     ret = []
+    print(coefficient_matrix)
+    print(y_vector)
     # todo: use the coefficient_matrix passed to method
     A = np.array([53, 0, 0, 0, 10, 2],
             [0, 14, 0, 0, 0, 12],
@@ -81,10 +83,10 @@ def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
     logger.debug("calculating most economical dc vector for lux dict {}".format(lux_dict))
     sorted(lux_dict)
     lux_vector = list(lux_dict.values())
-    logger.debug("lux dict transformed to vector sorted by labels {}".format(lux_dict))
-    dc_vector_list = solve_undetermined_system_of_linear_equations(weight_matrix, lux_vector)
+    logger.debug("lux dict transformed to vector sorted by labels {}".format(lux_vector))
+    dc_vector_list = solve_undetermined_system_of_linear_equations(weight_matrix, lux_vector, 10000)
     best_dc_vector, dc_sum = get_optimized_dc_vector(dc_vector_list)
-    labeled_dc_vector = get_labeled_dc_vector(best_dc_vector, lux_vector.keys())
+    labeled_dc_vector = get_labeled_dc_vector(best_dc_vector, list(lux_dict.keys()))
     logger.debug("least costly dc vector {}".format(labeled_dc_vector))
     dry_run_results = get_dry_run_results_for_dc_vector(weight_matrix, labeled_dc_vector)
     logger.debug("dry run results {}".format(dry_run_results))
