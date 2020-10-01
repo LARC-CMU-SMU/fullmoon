@@ -182,13 +182,6 @@ def get_calculated_optimized_dc():
     return dc_vector
 
 
-def update_optimized_dc_dict(old_dc, diff_dc):
-    ret={}
-    for key, old_dc_val in old_dc.items():
-        ret[key]=old_dc_val+diff_dc[key]
-    return ret
-
-
 def calculate_optimized_lux_thread():
     logger.debug("starting calculate_optimized_brightness thread")
     global OPTIMIZED_DC
@@ -196,8 +189,7 @@ def calculate_optimized_lux_thread():
         calculated_dc_vector = get_calculated_optimized_dc()
         if calculated_dc_vector:  # only update if system returned a optimized dc vector
             logger.debug("old dc dict {}".format(OPTIMIZED_DC))
-            logger.debug("calculated dc diff dict {}".format(calculated_dc_vector))
-            OPTIMIZED_DC = update_optimized_dc_dict(OPTIMIZED_DC, calculated_dc_vector)
+            OPTIMIZED_DC = calculated_dc_vector
             logger.debug("updated dc dict {}".format(OPTIMIZED_DC))
         sleep_time = config.general.get("calculate_optimized_lux_thread_sleep_time")
         time.sleep(sleep_time)
