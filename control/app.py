@@ -213,6 +213,7 @@ def set_optimized_dc_in_device():
     while 1:
         old_dc_dict = get_dc_from_db()
         for section, old_dc in old_dc_dict.items():
+            logger.debug("setting dc in section {}".format(section))
             if not OPTIMIZED_DC:  # fail safe
                 continue
             new_dc = OPTIMIZED_DC.get(section)
