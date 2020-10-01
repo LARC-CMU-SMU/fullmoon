@@ -126,8 +126,14 @@ def get_should_be_lux_vector_for_occupancy_vector(occupancy_vector):
 
 
 def get_already_added_lux(weight_matrix, dc_vector):
+    # todo :load this WM from db
+    WM = {'a': {'a': 53, 'e': 10, 'f': 2},
+          'b': {'b': 14, 'f': 12},
+          'c': {'c': 31, 'd': 9, 'e': 6, 'f': 4},
+          'd': {'c': 8, 'd': 35, 'f': 11},
+          }
     ret = {}
-    for cubical_sensor, weights in weight_matrix.items():
+    for cubical_sensor, weights in WM.items():
         tot_lux=0
         for light_source,val in weights.items():
             lux=val*dc_vector.get(light_source)/100
