@@ -26,10 +26,10 @@ def solve_undetermined_system_of_linear_equations(coefficient_matrix, y_vector, 
     print(coefficient_matrix)
     print(y_vector)
     # todo: use the coefficient_matrix passed to method
-    A = np.array([53, 0, 0, 0, 10, 2],
+    A = np.array([[53, 0, 0, 0, 10, 2],
             [0, 14, 0, 0, 0, 12],
             [0, 0, 31, 9, 6, 4],
-            [0, 0, 8, 35, 0, 11])
+            [0, 0, 8, 35, 0, 11]])
     # todo: use the coefficient_matrix passed to method
     b = np.array([0,0,20,0])
     # Find an initial solution using `np.linalg.lstsq`
@@ -50,7 +50,7 @@ def solve_undetermined_system_of_linear_equations(coefficient_matrix, y_vector, 
     return ret
 
 
-def get_the_most_optimized_dc_vector(list_of_dc_vectors):
+def get_least_costly_dc_vector(list_of_dc_vectors):
     dc_sum = float('inf')
     ret = None
     for dc_vector in list_of_dc_vectors:
@@ -86,7 +86,7 @@ def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
     lux_vector = list(lux_dict.values())
     logger.debug("lux dict transformed to vector sorted by labels {}".format(lux_vector))
     dc_vector_list = solve_undetermined_system_of_linear_equations(weight_matrix, lux_vector, 10000)
-    best_dc_vector, dc_sum = get_optimized_dc_vector(dc_vector_list)
+    best_dc_vector, dc_sum = get_least_costly_dc_vector(dc_vector_list)
     labeled_dc_vector = get_labeled_dc_vector(best_dc_vector, list(lux_dict.keys()))
     logger.debug("least costly dc vector {}".format(labeled_dc_vector))
     dry_run_results = get_dry_run_results_for_dc_vector(weight_matrix, labeled_dc_vector)
