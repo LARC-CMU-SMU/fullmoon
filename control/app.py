@@ -7,7 +7,7 @@ from logging.handlers import TimedRotatingFileHandler
 import config
 import db
 
-from optimizer import get_optimized_dc_vector
+import optimizer
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ def get_deficit_lux_vector(should_be_lux, current_lux, already_added_lux):
 
 # returns the optimum dc values that should to be set to fill the deficit lux levels
 def get_should_be_dc_vector(deficit_lux_vector, weight_matrix):
-    dc_vector, sum = get_optimized_dc_vector(weight_matrix, deficit_lux_vector, logger)
+    dc_vector, sum = optimizer.get_optimized_dc_vector(weight_matrix, deficit_lux_vector, logger)
     logger.debug("get_dc_vector[{}] with cost [{}]".format(dc_vector, sum))
     return dc_vector
 
@@ -263,13 +263,13 @@ def set_optimized_dc():
     while 1:
         old_dc_dict = get_current_dc()
         for section, old_dc in old_dc_dict.items():
-            logger.debug("setting dc in section {}".format(section))
             if not OPTIMIZED_DC:  # fail safe
                 continue
             new_dc = OPTIMIZED_DC.get(section)
             logger.debug("new dc {}, old dc {} delta dc {}"
                          .format(new_dc, old_dc, DELTA_DC))
             if abs(new_dc - old_dc) > DC_THRESHOLD:
+                logger.debug("changing the dc in section {} {}->{}".format(section, old_dc, new_dc))
                 #  bypass the gradual increase for now.
                 set_dc_in_section(section, new_dc)
             #     if new_dc > old_dc:
@@ -282,7 +282,7 @@ def set_optimized_dc():
             #         set_dc_in_section(section, old_dc - DELTA_DC)
             else:
                 logger.debug("dc delta {} < DC_THRESHOLD {}, not doing anything"
-                             .format((new_dc - old_dc), DELTA_DC))
+                             .format((new_dc - old_dc), DC_THRESHOLD))
 
         sleep_time = config.general.get("set_optimized_dc_in_device_thread_sleep_time")
         time.sleep(sleep_time)
