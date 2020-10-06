@@ -40,7 +40,7 @@ LUX_THRESHOLD = 5
 DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
 MIN_LUX = 10
-COMFORT_LUX = 25
+COMFORT_LUX = 30
 
 
 def set_dc_in_device(url, pin, dc, freq):
