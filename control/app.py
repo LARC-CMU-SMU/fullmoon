@@ -253,7 +253,7 @@ def get_current_dc():
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
     e = db.execute_sql(query, ('e',), logger, True)[0][0]
     f = db.execute_sql(query, ('f',), logger, True)[0][0]
-    logger.info("dc : a {}, b {}, c {}, d {}, e {}, f {}".format(a, b, c, d, e, f))
+    # logger.info("dc : a {}, b {}, c {}, d {}, e {}, f {}".format(a, b, c, d, e, f))
     ret = {'a': a, 'b': b, 'c': c, 'd': d, 'e': e, 'f': f}
     return ret
 
