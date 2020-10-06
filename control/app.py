@@ -2,11 +2,11 @@ import logging
 import sys
 import threading
 import time
+import requests
 from logging.handlers import TimedRotatingFileHandler
 
 import config
 import db
-
 import optimizer
 
 logger = logging.getLogger(__name__)
