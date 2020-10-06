@@ -8,10 +8,10 @@ from scripts.util.data_util import convert_str_list_to_time
 # START_TS = 1601417642
 # END_TS = 1601417642 + (3600*4)
 START_TS = 1601063536
-END_TS = 1601071469
+END_TS = 1601071469+60*60*12
 
-SENSOR_LABEL = 'f'
-SENSOR_PIN = 'tsl_1'
+SENSOR_LABEL = 'c'
+SENSOR_PIN = 'tsl_2'
 CAM_LABEL = 'b'
 
 TRUE_LUX_QUERY = "SELECT * FROM lux WHERE label=%s and pin =%s and timestamp > %s and timestamp < %s ORDER BY timestamp;"

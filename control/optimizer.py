@@ -11,7 +11,8 @@ def qr_null(A, tol=None):
 
 
 def get_sum(m_list):
-    return sum(m_list)
+    inter_list = [x if x > 0 else 0 for x in m_list]
+    return sum(inter_list)
 
 
 def is_all_elements_are_less_than_one(m_list):
@@ -56,9 +57,9 @@ def get_least_costly_dc_vector(list_of_dc_vectors):
     return ret, dc_sum
 
 
-def get_dry_run_results_for_dc_vector(weight_matrix, dc_vector):
+def get_dry_run_results_for_dc_vector(weight_dict, dc_vector):
     ret = {}
-    for cubical_sensor, weights in weight_matrix.items():
+    for cubical_sensor, weights in weight_dict.items():
         tot_lux = 0
         for light_source, val in weights.items():
             lux = val * dc_vector.get(light_source) / 100
@@ -79,7 +80,7 @@ def get_labeled_and_upscaled_dc_vector(dc_vector, labels):
     return ret
 
 
-def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
+def get_optimized_dc_vector(weight_matrix, weight_dict, lux_dict, logger):
     labeled_dc_vector = None
     logger.debug("calculating most economical dc vector for lux dict {} and weight matrix {}".format(lux_dict, weight_matrix))
     sorted(lux_dict)
@@ -92,6 +93,6 @@ def get_optimized_dc_vector(weight_matrix, lux_dict, logger):
         # logger.debug("best dc vector [{}]".format(best_dc_vector))
         labeled_dc_vector = get_labeled_and_upscaled_dc_vector(best_dc_vector, lux_key_list)
         logger.debug("least costly dc vector {}".format(labeled_dc_vector))
-        # dry_run_results = get_dry_run_results_for_dc_vector(weight_matrix, labeled_dc_vector)
-        # logger.debug("dry run results {}".format(dry_run_results))
+        dry_run_results = get_dry_run_results_for_dc_vector(weight_dict, labeled_dc_vector)
+        logger.debug("dry run results {}".format(dry_run_results))
     return labeled_dc_vector, dc_sum

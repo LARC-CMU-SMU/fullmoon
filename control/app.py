@@ -4,8 +4,6 @@ import threading
 import time
 from logging.handlers import TimedRotatingFileHandler
 
-import requests
-
 import config
 import db
 
@@ -34,6 +32,7 @@ QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %
 SERVICE_NAME = "CONTROL"
 COMFORT_DC = 60 * 10000
 DELTA_DC = 10 * 10000
+WEIGHTS_DICT = None
 WEIGHT_MATRIX = None
 OPTIMIZED_DC = None
 DC_THRESHOLD = 2 * 10000
@@ -62,20 +61,6 @@ def get_time():
     return int(time.time())
 
 
-def get_weight_matrix_from_db():
-    # todo : load the matrix from db
-    return [[53, 0, 0, 0, 10, 2],
-            [0, 14, 0, 0, 0, 12],
-            [0, 0, 31, 9, 6, 4],
-            [0, 0, 8, 35, 0, 11]]
-
-
-def init_weight_matrix():
-    global WEIGHT_MATRIX
-    WEIGHT_MATRIX = get_weight_matrix_from_db()
-
-
-# make sure the DC level is within bounds
 def validate_dc(dc):
     logger.debug("validating dc {}".format(dc))
     if dc < DC_LOWER_BOUND:
@@ -95,12 +80,29 @@ def set_dc_in_section(section, dc):
         logger.error("setting lux failed")
 
 
+def get_weight_matrix_dict():
+    # todo : load the matrix from db
+    return {'a': {'a': 53.3, 'b': 0.8, 'c': 0.4, 'd': 0, 'e': 9.6, 'f': 1.7},
+            'b': {'a': 0.4, 'b': 15.4, 'c': 0, 'd': 1.7, 'e': 0, 'f': 12.1},
+            'c': {'a': 1.25, 'b': 0, 'c': 31.7, 'd': 10, 'e': 6.25, 'f': 4.2},
+            'd': {'a': 0.4, 'b': 0.8, 'c': 8.75, 'd': 37.1, 'e': 0.4, 'f': 11.25}
+            }
+
+
+def init_weights():
+    global WEIGHTS_DICT, WEIGHT_MATRIX
+    WEIGHTS_DICT = get_weight_matrix_dict()
+    logger.debug("weights dict :{}".format(WEIGHTS_DICT))
+    WEIGHT_MATRIX = get_matrix_from_weight_dict(WEIGHTS_DICT)
+    logger.debug("weights matrix :{}".format(WEIGHT_MATRIX))
+
+
 # instantly light up newly occupied sections
-def handle_newly_occupied():
+def handle_newly_occupied_thread():
     logger.debug("starting handle_newly_occupied thread")
-    prev_occupancy_dict = get_occupancy_from_db()
+    prev_occupancy_dict = get_current_occupancy()
     while 1:
-        now_occupancy_dict = get_occupancy_from_db()
+        now_occupancy_dict = get_current_occupancy()
         for section in prev_occupancy_dict.keys():
             prev_occupied = prev_occupancy_dict.get(section)
             now_occupied = now_occupancy_dict.get(section)
@@ -122,24 +124,20 @@ def get_should_be_lux_vector_for_occupancy_vector(occupancy_vector):
         if occupied:
             optimum_lux = COMFORT_LUX
         optimum_lux_vector[section] = optimum_lux
+    # round the lux values to nearest 10
+    optimum_lux_vector = get_rounded_values_dict(optimum_lux_vector)
     return optimum_lux_vector
 
 
-def get_already_added_lux(weight_matrix, dc_vector):
-    # todo :load this WM from db
-    WM = {'a': {'a': 53, 'e': 10, 'f': 2},
-          'b': {'b': 14, 'f': 12},
-          'c': {'c': 31, 'd': 9, 'e': 6, 'f': 4},
-          'd': {'c': 8, 'd': 35, 'f': 11},
-          }
+def get_lux_already_added_by_system(weight_dict, dc_vector):
     ret = {}
-    for cubical_sensor, weights in WM.items():
-        tot_lux=0
-        for light_source,val in weights.items():
-            lux=val*dc_vector.get(light_source)/100
-            tot_lux+=lux
+    for cubical_sensor, weights in weight_dict.items():
+        tot_lux = 0
+        for light_source, val in weights.items():
+            lux = val * dc_vector.get(light_source) / 1000000
+            tot_lux += lux
         ret[cubical_sensor] = tot_lux
-    return ret
+    return get_rounded_values_dict(ret)
 
 
 # returns the change of lux levels system should make
@@ -154,37 +152,64 @@ def get_deficit_lux_vector(should_be_lux, current_lux, already_added_lux):
 
 
 # returns the optimum dc values that should to be set to fill the deficit lux levels
-def get_dc_vector(deficit_lux_vector, weight_matrix):
-    # dc_vector = {}
-    # for section, lux_value in deficit_lux_vector.items():
-    #     dc_vector[section] = lux_value * 10000
+def get_should_be_dc_vector(deficit_lux_vector, weight_matrix):
     dc_vector, sum = get_optimized_dc_vector(weight_matrix, deficit_lux_vector, logger)
     logger.debug("get_dc_vector[{}] with cost [{}]".format(dc_vector, sum))
     return dc_vector
 
 
-def get_calculated_optimized_dc():
-    occupancy_vector = get_occupancy_from_db()
-    # logger.info("occupancy_vector {}".format(occupancy_vector))
-    should_be_lux_vector = get_should_be_lux_vector_for_occupancy_vector(occupancy_vector)
+def get_rounded_values_dict(m_dict):
+    ret = {}
+    for k, v in m_dict.items():
+        ret[k] = round_to_base(v)
+    return ret
+
+
+def round_to_base(x, base=10):
+    return base * round(x / base)
+
+
+def get_optimized_dc_vector():
+    occupancy_vector = get_current_occupancy()
+
+    should_be_lux_vector = get_should_be_lux_vector_for_occupancy_vector(occupancy_vector)  # rounded to base 10
     logger.info("should_be_lux_vector {}".format(should_be_lux_vector))
-    current_lux_vector = get_current_lux_from_db()
+
+    current_lux_vector = get_current_lux()  # rounded to base 10
     logger.info("current_lux_vector {}".format(current_lux_vector))
-    current_dc_vector= get_dc_from_db()
-    already_added_lux = get_already_added_lux(WEIGHT_MATRIX, current_dc_vector)
+
+    current_dc_vector = get_current_dc()
+    logger.info("current_dc_vector {}".format(current_dc_vector))
+
+    already_added_lux = get_lux_already_added_by_system(WEIGHTS_DICT, current_dc_vector)  # rounded to base 10
     logger.info("already added lux {}".format(already_added_lux))
+
     deficit_lux_vector = get_deficit_lux_vector(should_be_lux_vector, current_lux_vector, already_added_lux)
     logger.info("deficit_lux_vector {}".format(deficit_lux_vector))
-    dc_vector = get_dc_vector(deficit_lux_vector, WEIGHT_MATRIX)
+
+    dc_vector = get_should_be_dc_vector(deficit_lux_vector, WEIGHT_MATRIX)
     logger.info("dc_vector {}".format(dc_vector))
+
     return dc_vector
+
+
+def get_matrix_from_weight_dict(weight_dict):
+    ret = []
+    sorted(weight_dict)
+    for section_label, section_weights in weight_dict.items():
+        current_row = []
+        sorted(section_weights)
+        for light_source_id, light_source_weight in section_weights.items():
+            current_row.append(light_source_weight)
+        ret.append(current_row)
+    return ret
 
 
 def calculate_optimized_lux_thread():
     logger.debug("starting calculate_optimized_brightness thread")
     global OPTIMIZED_DC
     while 1:
-        calculated_dc_vector = get_calculated_optimized_dc()
+        calculated_dc_vector = get_optimized_dc_vector()
         if calculated_dc_vector:  # only update if system returned a optimized dc vector
             logger.debug("old dc dict {}".format(OPTIMIZED_DC))
             OPTIMIZED_DC = calculated_dc_vector
@@ -193,7 +218,7 @@ def calculate_optimized_lux_thread():
         time.sleep(sleep_time)
 
 
-def get_current_lux_from_db():
+def get_current_lux():
     # todo : optimize below code
     # logger.debug("querying the lux from db")
     query = "SELECT lux FROM lux WHERE label=%s AND pin=%s ORDER BY timestamp DESC LIMIT 1"
@@ -202,10 +227,11 @@ def get_current_lux_from_db():
     c = db.execute_sql(query, ('c', 'tsl_0'), logger, True)[0][0]
     d = db.execute_sql(query, ('d', 'tsl_0'), logger, True)[0][0]
     logger.info("lux :a {}, b {}, c {}, d {}".format(a, b, c, d))
-    return {'a': a, 'b': b, 'c': c, 'd': d}
+    ret = {'a': a, 'b': b, 'c': c, 'd': d}
+    return get_rounded_values_dict(ret)
 
 
-def get_occupancy_from_db():
+def get_current_occupancy():
     # todo : optimize
     # logger.debug("querying the occupancy from db")
     query = "SELECT occupancy FROM occupancy WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
@@ -217,7 +243,7 @@ def get_occupancy_from_db():
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
-def get_dc_from_db():
+def get_current_dc():
     # todo : optimize
     # logger.debug("querying the dc from db")
     query = "SELECT dc FROM dc WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
@@ -228,13 +254,14 @@ def get_dc_from_db():
     e = db.execute_sql(query, ('e',), logger, True)[0][0]
     f = db.execute_sql(query, ('f',), logger, True)[0][0]
     logger.info("dc : a {}, b {}, c {}, d {}, e {}, f {}".format(a, b, c, d, e, f))
-    return {'a': a, 'b': b, 'c': c, 'd': d, 'e':e, 'f':f}
+    ret = {'a': a, 'b': b, 'c': c, 'd': d, 'e': e, 'f': f}
+    return ret
 
 
-def set_optimized_dc_in_device():
+def set_optimized_dc():
     logger.debug("starting set_optimized_brightness thread")
     while 1:
-        old_dc_dict = get_dc_from_db()
+        old_dc_dict = get_current_dc()
         for section, old_dc in old_dc_dict.items():
             logger.debug("setting dc in section {}".format(section))
             if not OPTIMIZED_DC:  # fail safe
@@ -265,13 +292,13 @@ def main():
     wait_time_for_db = config.general["wait_time_for_db"]
     logger.info("Waiting [%s] seconds for DB to come up", wait_time_for_db)
     time.sleep(wait_time_for_db)
-    init_weight_matrix()
+    init_weights()
     logger.info("weight_matrix_loaded")
     # todo : uncomment this
     # threading.Thread(target=handle_newly_occupied).start()
     threading.Thread(target=calculate_optimized_lux_thread).start()
     time.sleep(config.general['wait_between_optimize_and_control'])
-    threading.Thread(target=set_optimized_dc_in_device).start()
+    threading.Thread(target=set_optimized_dc).start()
     logger.info("init finished[{}]".format(SERVICE_NAME))
 
 

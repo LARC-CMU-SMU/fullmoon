@@ -83,8 +83,8 @@ def update_graph_scatter(input_data):
     # X.append(X[-1]+1)
     # Y.append(Y[-1]+Y[-1]*random.uniform(-0.1,0.1))
     update_data()
-    x_data = LUX_DATA.get('a_tsl_9').get('ts')
-    y_data = LUX_DATA.get('a_tsl_9').get('lux')
+    x_data = LUX_DATA.get('a_tsl_0').get('ts')
+    y_data = LUX_DATA.get('a_tsl_0').get('lux')
     # data = plotly.graph_objs.Scatter(
     #     x=list(x_data),
     #     y=list(y_data),
@@ -94,11 +94,12 @@ def update_graph_scatter(input_data):
     #
     # return {'data': [data], 'layout': go.Layout(xaxis=dict(range=[min(x_data), max(x_data)]),
     #                                             yaxis=dict(range=[min(y_data), max(y_data)]), )}
-    fig = make_subplots(rows=8, cols=1)
+    # fig = make_subplots(rows=8, cols=1)
     # fig['layout']['margin'] = {
     #     'l': 30, 'r': 10, 'b': 30, 't': 10
     # }
     # fig['layout']['legend'] = {'x': 0, 'y': 1, 'xanchor': 'left'}
+    fig = go.Figure()
     labels = LUX_DATA.keys()
     sorted(labels)
     for i,label in enumerate(labels):

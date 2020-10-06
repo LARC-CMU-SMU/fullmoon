@@ -8,12 +8,12 @@ import plotly.graph_objects as go
 # result will be written to OUT_CSV
 # resulting csv file can be imported to DB(fp table) directly
 
-CSV_DIR = "/Users/kasun/working_data/sep26/"
+CSV_DIR = "/Users/kasun/working_data/smartlight/sep30/"
 OUT_CSV = '{}correlation.csv'.format(CSV_DIR)
 CAM_LABEL = 'b'
 
-START_TS = 1601040358
-END_TS = 1601048295
+START_TS = 1601474553
+END_TS = 1601482490
 
 # for the h range, only consider the data points where v channel value is above this threshold.
 # because once the v channel value drops after certain value h value doesn't stay constant.
