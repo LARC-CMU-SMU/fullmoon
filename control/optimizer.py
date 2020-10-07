@@ -11,8 +11,7 @@ def qr_null(A, tol=None):
 
 
 def get_sum(m_list):
-    inter_list = [x if x > 0 else 0 for x in m_list]
-    return sum(inter_list)
+    return sum(m_list)
 
 
 def is_all_elements_are_less_than_one(m_list):
@@ -45,11 +44,16 @@ def solve_undetermined_system_of_linear_equations(coefficient_matrix, y_vector, 
     return ret
 
 
+def get_positive_dc_vector(dc_vector):
+    return [x if x > 0 else 0 for x in dc_vector]
+
+
 def get_least_costly_dc_vector(list_of_dc_vectors):
     dc_sum = float('inf')
     ret = None
     for dc_vector in list_of_dc_vectors:
         if is_all_elements_are_less_than_one(dc_vector):  # basic filtering based on individual dc
+            dc_vector = get_positive_dc_vector(dc_vector)  # can't set negative dc values in the system
             current_sum = get_sum(dc_vector)
             if current_sum < dc_sum:  # find out the least costly(dc wise) setting
                 dc_sum = current_sum

@@ -92,13 +92,13 @@ def get_validated_dc(m_dc_vector):
 
 
 def get_optimized_dc_vector(b):
-    A_=np.array(get_matrix_from_weight_dict(WM))
-    print("from dict", A_)
-    A = np.array([[53.333332, 0.8333333, 0.41666666, 0, 9.583333, 1.6666666],
-                  [0.41666666, 15.416667, 0, 1.6666666, 0, 12.083333],
-                  [1.25, 0, 31.666666, 10, 6.25, 4.1666665],
-                  [0.41666666, 0.8333333, 8.75, 37.083332, 0.41666666, 11.25]])
-    print("hand written", A)
+    A=np.array(get_matrix_from_weight_dict(WM))
+    # print("from dict", A_)
+    # A = np.array([[53.333332, 0.8333333, 0.41666666, 0, 9.583333, 1.6666666],
+    #               [0.41666666, 15.416667, 0, 1.6666666, 0, 12.083333],
+    #               [1.25, 0, 31.666666, 10, 6.25, 4.1666665],
+    #               [0.41666666, 0.8333333, 8.75, 37.083332, 0.41666666, 11.25]])
+    # print("hand written", A)
     c = np.array(b)
     # Find an initial solution using `np.linalg.lstsq`
     x_lstsq = np.linalg.lstsq(A, c, rcond=None)[0]
@@ -163,14 +163,14 @@ def round_the_dict(m_dict):
 # def get_artificialy_added_lux(weight_matrix, dc_vector)
 
 
-future_lux={'a':SAFETY_LUX, 'b':COMFORT_LUX, 'c':SAFETY_LUX, 'd':COMFORT_LUX}
+future_lux={'a':SAFETY_LUX, 'b':COMFORT_LUX, 'c':SAFETY_LUX, 'd':SAFETY_LUX}
 print("future lux", future_lux)
 
-current_lux = {'a':70,'b':34,'c':58,'d':59}
+current_lux = {'a':0,'b':0,'c':0,'d':0}
 rounded_current_lux= round_the_dict(current_lux)
 print("current lux", rounded_current_lux)
 
-existing_dc={'a':100, 'b':100, 'c':100, 'd':100, 'e':100,'f':100}
+existing_dc={'a':0, 'b':0, 'c':0, 'd':0, 'e':0,'f':0}
 
 already_added_lux =check(WM,existing_dc)
 rounded_already_added_lux = round_the_dict(already_added_lux)

@@ -142,11 +142,13 @@ def get_lux_already_added_by_system(weight_dict, dc_vector):
 
 # returns the change of lux levels system should make
 # ie if the section has 50 lux now and the should be lux is 60, deficit lux is 10
-# can be positive or negative
+# can only be positive
 def get_deficit_lux_vector(should_be_lux, current_lux, already_added_lux):
     deficit_lux_vector = {}
     for section in should_be_lux.keys():
         diff = should_be_lux[section] - current_lux[section] + already_added_lux[section]
+        if diff < 0:
+            diff = 0
         deficit_lux_vector[section] = diff
     return deficit_lux_vector
 
