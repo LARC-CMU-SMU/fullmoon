@@ -152,7 +152,7 @@ def validate_deficit_lux_vector(lux_dict):
 
 # returns the optimum dc values that should to be set to fill the deficit lux levels
 def get_should_be_dc_vector(deficit_lux_vector, weight_matrix, weight_dict):
-    dc_vector, sum = optimizer.get_optimized_dc_dict(weight_matrix, weight_dict, deficit_lux_vector, logger)
+    dc_vector, sum = optimizer.opt_get_optimized_dc_dict(weight_matrix, weight_dict, deficit_lux_vector, logger)
     logger.debug("get_dc_vector[{}] with cost [{}]".format(dc_vector, sum))
     return dc_vector
 
