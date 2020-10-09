@@ -152,7 +152,7 @@ def validate_deficit_lux_vector(lux_dict):
 
 # returns the optimum dc values that should to be set to fill the deficit lux levels
 def get_should_be_dc_vector(deficit_lux_vector, weight_matrix, weight_dict):
-    dc_vector, sum = optimizer.get_optimized_dc_vector(weight_matrix, weight_dict, deficit_lux_vector, logger)
+    dc_vector, sum = optimizer.get_optimized_dc_dict(weight_matrix, weight_dict, deficit_lux_vector, logger)
     logger.debug("get_dc_vector[{}] with cost [{}]".format(dc_vector, sum))
     return dc_vector
 
@@ -182,7 +182,21 @@ def add_dict(dict_1, dict_2):
     return ret
 
 
-def get_optimized_dc_vector():
+def need_to_add_more_lux_to_system(deficit_lux_dict):
+    for deficit_lux_val in deficit_lux_dict.values():
+        if deficit_lux_val > LUX_THRESHOLD:
+            return True
+    return False
+
+
+def get_empty_dc_dict(sample_dc_dict):
+    ret={}
+    for k in sample_dc_dict.keys():
+        ret[k]=0
+    return ret
+
+
+def get_optimized_dc_dict():
     occupancy_dict = get_current_occupancy()
 
     should_be_lux_dict = get_should_be_lux_vector_for_occupancy_vector(occupancy_dict)  # rounded to base 10
@@ -203,9 +217,13 @@ def get_optimized_dc_vector():
     deficit_lux_dict = validate_deficit_lux_vector(subtract_dict(should_be_lux_dict, natural_lux_dict))
     logger.info("deficit_lux_dict {}".format(deficit_lux_dict))
 
-    optimized_dc_dict = get_should_be_dc_vector(deficit_lux_dict, WEIGHT_MATRIX, WEIGHTS_DICT)
-    logger.info("optimized_dc_dict {}".format(optimized_dc_dict))
+    if need_to_add_more_lux_to_system(deficit_lux_dict):
+        optimized_dc_dict = get_should_be_dc_vector(deficit_lux_dict, WEIGHT_MATRIX, WEIGHTS_DICT)
+    else:
+        logger.info("no need to add more lux")
+        optimized_dc_dict = get_empty_dc_dict()
 
+    logger.info("optimized_dc_dict {}".format(optimized_dc_dict))
     return optimized_dc_dict
 
 
@@ -225,7 +243,7 @@ def calculate_optimized_lux_thread():
     logger.debug("starting calculate_optimized_brightness thread")
     global OPTIMIZED_DC
     while 1:
-        calculated_dc_vector = get_optimized_dc_vector()
+        calculated_dc_vector = get_optimized_dc_dict()
         if calculated_dc_vector:  # only update if system returned a optimized dc vector
             logger.debug("old dc dict {}".format(OPTIMIZED_DC))
             OPTIMIZED_DC = calculated_dc_vector
@@ -282,8 +300,6 @@ def set_optimized_dc():
             if not OPTIMIZED_DC:  # fail safe
                 continue
             new_dc = OPTIMIZED_DC.get(section)
-            logger.debug("section [{}] new dc [{}], old dc [{}]"
-                         .format(section, new_dc, old_dc))
             abs_diff = abs(new_dc - old_dc)
             if abs_diff > DC_THRESHOLD:
                 logger.debug("section [{}] changing the dc in {}->{}".format(section, old_dc, new_dc))
@@ -298,7 +314,7 @@ def set_optimized_dc():
             #                      .format(old_dc, new_dc, DELTA_DC))
             #         set_dc_in_section(section, old_dc - DELTA_DC)
             else:
-                logger.debug("section [{}] dc delta {} < DC_THRESHOLD {}, not doing anything"
+                logger.debug("section [{}] DC delta {} < DC_THRESHOLD {}, not doing anything"
                              .format(section, abs_diff, DC_THRESHOLD))
 
         sleep_time = config.general.get("set_optimized_dc_in_device_thread_sleep_time")

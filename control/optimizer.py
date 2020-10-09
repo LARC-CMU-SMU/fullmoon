@@ -86,7 +86,7 @@ def get_labeled_and_upscaled_dc_vector(dc_vector, labels):
 
 def get_optimized_dc_vector(weight_matrix, weight_dict, lux_dict, logger):
     labeled_dc_vector = None
-    logger.debug("calculating most economical dc vector for lux dict {} and weight matrix {}".format(lux_dict, weight_matrix))
+    logger.debug("calculating most economical dc vector for lux dict {}".format(lux_dict))
     sorted(lux_dict)
     lux_values_vector = list(lux_dict.values())
     lux_key_list=list(lux_dict.keys())
