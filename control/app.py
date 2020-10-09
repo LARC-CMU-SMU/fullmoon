@@ -189,9 +189,9 @@ def need_to_add_more_lux_to_system(deficit_lux_dict):
     return False
 
 
-def get_empty_dc_dict(sample_dc_dict):
+def get_empty_dc_dict(light_source_keys):
     ret={}
-    for k in sample_dc_dict.keys():
+    for k in light_source_keys:
         ret[k]=0
     return ret
 
@@ -221,7 +221,7 @@ def get_optimized_dc_dict():
         optimized_dc_dict = get_should_be_dc_vector(deficit_lux_dict, WEIGHT_MATRIX, WEIGHTS_DICT)
     else:
         logger.info("no need to add more lux")
-        optimized_dc_dict = get_empty_dc_dict()
+        optimized_dc_dict = get_empty_dc_dict(current_dc_dict.keys())
 
     logger.info("optimized_dc_dict {}".format(optimized_dc_dict))
     return optimized_dc_dict
