@@ -282,10 +282,11 @@ def set_optimized_dc():
             if not OPTIMIZED_DC:  # fail safe
                 continue
             new_dc = OPTIMIZED_DC.get(section)
-            logger.debug("new dc {}, old dc {}"
-                         .format(new_dc, old_dc))
-            if abs(new_dc - old_dc) > DC_THRESHOLD:
-                logger.debug("changing the dc in section {} {}->{}".format(section, old_dc, new_dc))
+            logger.debug("section [{}] new dc [{}], old dc [{}]"
+                         .format(section, new_dc, old_dc))
+            abs_diff = abs(new_dc - old_dc)
+            if abs_diff > DC_THRESHOLD:
+                logger.debug("section [{}] changing the dc in {}->{}".format(section, old_dc, new_dc))
                 #  bypass the gradual increase for now.
                 set_dc_in_section(section, new_dc)
             #     if new_dc > old_dc:
@@ -297,8 +298,8 @@ def set_optimized_dc():
             #                      .format(old_dc, new_dc, DELTA_DC))
             #         set_dc_in_section(section, old_dc - DELTA_DC)
             else:
-                logger.debug("dc delta {} < DC_THRESHOLD {}, not doing anything"
-                             .format((new_dc - old_dc), DC_THRESHOLD))
+                logger.debug("section [{}] dc delta {} < DC_THRESHOLD {}, not doing anything"
+                             .format(section, abs_diff, DC_THRESHOLD))
 
         sleep_time = config.general.get("set_optimized_dc_in_device_thread_sleep_time")
         time.sleep(sleep_time)
