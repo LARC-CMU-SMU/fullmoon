@@ -30,17 +30,17 @@ QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s,
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
 
 SERVICE_NAME = "CONTROL"
-COMFORT_DC = 60 * 10000
-DELTA_DC = 10 * 10000
+# COMFORT_DC = 60 * 10000
+# DELTA_DC = 10 * 10000
 WEIGHTS_DICT = None
 WEIGHT_MATRIX = None
 OPTIMIZED_DC = None
-DC_THRESHOLD = 2 * 10000
+DC_THRESHOLD = 1 * 10000
 LUX_THRESHOLD = 5
 DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
 MIN_SAFETY_LUX = 10
-COMFORT_LUX = 30
+COMFORT_LUX = 20
 
 
 def set_dc_in_device(url, pin, dc, freq):
@@ -98,22 +98,22 @@ def init_weights():
 
 
 # instantly light up newly occupied sections
-def handle_newly_occupied_thread():
-    logger.debug("starting handle_newly_occupied thread")
-    prev_occupancy_dict = get_current_occupancy()
-    while 1:
-        now_occupancy_dict = get_current_occupancy()
-        for section in prev_occupancy_dict.keys():
-            prev_occupied = prev_occupancy_dict.get(section)
-            now_occupied = now_occupancy_dict.get(section)
-            if prev_occupied is not now_occupied:
-                logger.info("prev {} -> now {}".format(prev_occupied, now_occupied))
-                if now_occupied and not prev_occupied:
-                    set_dc_in_section(section, COMFORT_DC)
-
-        prev_occupancy_dict = now_occupancy_dict
-        sleep_time = config.general.get("handle_newly_occupied_thread_sleep_time")
-        time.sleep(sleep_time)
+# def handle_newly_occupied_thread():
+#     logger.debug("starting handle_newly_occupied thread")
+#     prev_occupancy_dict = get_current_occupancy()
+#     while 1:
+#         now_occupancy_dict = get_current_occupancy()
+#         for section in prev_occupancy_dict.keys():
+#             prev_occupied = prev_occupancy_dict.get(section)
+#             now_occupied = now_occupancy_dict.get(section)
+#             if prev_occupied is not now_occupied:
+#                 logger.info("prev {} -> now {}".format(prev_occupied, now_occupied))
+#                 if now_occupied and not prev_occupied:
+#                     set_dc_in_section(section, COMFORT_DC)
+#
+#         prev_occupancy_dict = now_occupancy_dict
+#         sleep_time = config.general.get("handle_newly_occupied_thread_sleep_time")
+#         time.sleep(sleep_time)
 
 
 # returns the should be lux levels for the sections based on occupancy
@@ -282,8 +282,8 @@ def set_optimized_dc():
             if not OPTIMIZED_DC:  # fail safe
                 continue
             new_dc = OPTIMIZED_DC.get(section)
-            logger.debug("new dc {}, old dc {} delta dc {}"
-                         .format(new_dc, old_dc, DELTA_DC))
+            logger.debug("new dc {}, old dc {}"
+                         .format(new_dc, old_dc))
             if abs(new_dc - old_dc) > DC_THRESHOLD:
                 logger.debug("changing the dc in section {} {}->{}".format(section, old_dc, new_dc))
                 #  bypass the gradual increase for now.
