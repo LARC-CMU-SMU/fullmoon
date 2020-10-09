@@ -39,7 +39,7 @@ DC_THRESHOLD = 2 * 10000
 LUX_THRESHOLD = 5
 DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
-MIN_LUX = 10
+MIN_SAFETY_LUX = 10
 COMFORT_LUX = 30
 
 
@@ -120,7 +120,7 @@ def handle_newly_occupied_thread():
 def get_should_be_lux_vector_for_occupancy_vector(occupancy_vector):
     optimum_lux_vector = {}
     for section, occupied in occupancy_vector.items():
-        optimum_lux = MIN_LUX
+        optimum_lux = MIN_SAFETY_LUX
         if occupied:
             optimum_lux = COMFORT_LUX
         optimum_lux_vector[section] = optimum_lux
@@ -140,17 +140,14 @@ def get_lux_already_added_by_system(weight_dict, dc_vector):
     return get_rounded_values_dict(ret)
 
 
-# returns the change of lux levels system should make
-# ie if the section has 50 lux now and the should be lux is 60, deficit lux is 10
-# can only be positive
-def get_deficit_lux_vector(should_be_lux, current_lux, already_added_lux):
-    deficit_lux_vector = {}
-    for section in should_be_lux.keys():
-        diff = should_be_lux[section] - current_lux[section] + already_added_lux[section]
-        if diff < 0:
-            diff = 0
-        deficit_lux_vector[section] = diff
-    return deficit_lux_vector
+# make sure the deficit vector have only positive values
+def validate_deficit_lux_vector(lux_dict):
+    ret = {}
+    for k, v in lux_dict.items():
+        if v < 0:
+            v = 0
+        ret[k] = v
+    return ret
 
 
 # returns the optimum dc values that should to be set to fill the deficit lux levels
@@ -171,28 +168,45 @@ def round_to_base(x, base=10):
     return base * round(x / base)
 
 
+def subtract_dict(dict_1, dict_2):
+    ret = {}
+    for k in dict_1.keys():
+        ret[k] = dict_1[k] - dict_2[k]
+    return ret
+
+
+def add_dict(dict_1, dict_2):
+    ret = {}
+    for k in dict_1.keys():
+        ret[k] = dict_1[k] + dict_2[k]
+    return ret
+
+
 def get_optimized_dc_vector():
-    occupancy_vector = get_current_occupancy()
+    occupancy_dict = get_current_occupancy()
 
-    should_be_lux_vector = get_should_be_lux_vector_for_occupancy_vector(occupancy_vector)  # rounded to base 10
-    logger.info("should_be_lux_vector {}".format(should_be_lux_vector))
+    should_be_lux_dict = get_should_be_lux_vector_for_occupancy_vector(occupancy_dict)  # rounded to base 10
+    logger.info("should_be_lux_dict {}".format(should_be_lux_dict))
 
-    current_lux_vector = get_current_lux()  # rounded to base 10
-    logger.info("current_lux_vector {}".format(current_lux_vector))
+    current_dc_dict = get_current_dc()
+    logger.info("current_dc_dict {}".format(current_dc_dict))
 
-    current_dc_vector = get_current_dc()
-    logger.info("current_dc_vector {}".format(current_dc_vector))
+    already_added_lux_dict = get_lux_already_added_by_system(WEIGHTS_DICT, current_dc_dict)  # rounded to base 10
+    logger.info("already_added_lux_dict {}".format(already_added_lux_dict))
 
-    already_added_lux = get_lux_already_added_by_system(WEIGHTS_DICT, current_dc_vector)  # rounded to base 10
-    logger.info("already added lux {}".format(already_added_lux))
+    current_lux_dict = get_current_lux()  # rounded to base 10
+    logger.info("current_lux_dict {}".format(current_lux_dict))
 
-    deficit_lux_vector = get_deficit_lux_vector(should_be_lux_vector, current_lux_vector, already_added_lux)
-    logger.info("deficit_lux_vector {}".format(deficit_lux_vector))
+    natural_lux_dict = subtract_dict(current_lux_dict, already_added_lux_dict)
+    logger.info("natural_lux_dict {}".format(natural_lux_dict))
 
-    dc_vector = get_should_be_dc_vector(deficit_lux_vector, WEIGHT_MATRIX, WEIGHTS_DICT)
-    logger.info("dc_vector {}".format(dc_vector))
+    deficit_lux_dict = validate_deficit_lux_vector(subtract_dict(should_be_lux_dict, natural_lux_dict))
+    logger.info("deficit_lux_dict {}".format(deficit_lux_dict))
 
-    return dc_vector
+    optimized_dc_dict = get_should_be_dc_vector(deficit_lux_dict, WEIGHT_MATRIX, WEIGHTS_DICT)
+    logger.info("optimized_dc_dict {}".format(optimized_dc_dict))
+
+    return optimized_dc_dict
 
 
 def get_matrix_from_weight_dict(weight_dict):
