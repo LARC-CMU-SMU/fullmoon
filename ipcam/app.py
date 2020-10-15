@@ -203,7 +203,7 @@ def handle_ip_cam_thread(cam_label, ip_cam_url):
                 lux_values_and_pixel_stat = calculate_lux_values_from_image(cam_label, frame)
                 write_lux_values_to_db(lux_values_and_pixel_stat, cam_label, timestamp)
                 if config.general.get("write_image"):
-                    image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, cam_label))
+                    image_path = join(config.general.get("image_dir"), "{}.jpg".format(timestamp))
                     logger.debug("writing image to {}".format(image_path))
                     cv2.imwrite(image_path, frame)
             else:
