@@ -30,7 +30,7 @@ logger.addHandler(handler)
 
 QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,lux,h_mean,gray_mean,cam_label,patch_label,lux_label) " \
                          "VALUES (%s, %s, %s, %s, %s, %s, %s)"
-QUERY_PIXEL_LUX_CACHE_UPSERT = "INSERT INTO pixel_lux(timestamp,lux,h_mean,gray_mean,cam_label,patch_label,lux_label) " \
+QUERY_PIXEL_LUX_CACHE_UPSERT = "INSERT INTO pixel_lux_cache(timestamp,lux,h_mean,gray_mean,cam_label,patch_label,lux_label) " \
                                "VALUES (%s, %s, %s, %s, %s, %s, %s)" \
                                "ON CONFLICT(cam_label,patch_label,lux_label)" \
                                "DO UPDATE SET " \
