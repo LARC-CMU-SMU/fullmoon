@@ -27,8 +27,8 @@ logger.addHandler(handler)
 
 QUERY_LUX_INSERT = "INSERT INTO lux(timestamp,label,lux,pin) VALUES (%s, %s, %s, %s)"
 QUERY_DC_INSERT = "INSERT INTO dc(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)"
-QUERY_DC_CACHE_INSERT = "UPDATE dc_cache SET timestamp = %s, dc = %s WHERE label = %s and pin =%s"
-
+QUERY_DC_CACHE_UPSERT = "INSERT INTO dc_cache(timestamp,label,pin, dc) VALUES (%s, %s, %s, %s)" \
+                        "ON CONFLICT (label,pin) DO UPDATE SET timestamp = excluded.timestamp, dc = excluded.dc;"
 
 SERVICE_NAME = "RECORD"
 
@@ -102,7 +102,7 @@ def collect_dc_values():
             for pin in config.RPI_DEVICES.get(label).get('dc_pins'):
                 dc = get_dc_from_device(url, pin)
                 db.execute_sql(QUERY_DC_INSERT, (timestamp, label, pin, dc), logger)
-                db.execute_sql(QUERY_DC_CACHE_INSERT, (timestamp, dc, label, pin), logger)
+                db.execute_sql(QUERY_DC_CACHE_UPSERT, (timestamp, dc, label, pin), logger)
         time.sleep(config.general.get("collect_dc_thread_sleep_time"))
 
 
