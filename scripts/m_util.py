@@ -1,5 +1,7 @@
 import psycopg2
 import psycopg2.extras
+import xml.etree.ElementTree as ET
+
 
 
 def align_ts(m_ts_list, delta=5):
@@ -114,6 +116,7 @@ def execute_sql_for_dict(query, values):
                                port=5432)
         cursor = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute(query, values)
+        con.commit()
         inter_ret = cursor.fetchall()
         ret = [dict(row) for row in inter_ret]
     except Exception as e:
@@ -155,3 +158,17 @@ def load_finger_prints_from_list(fp_dict_list):
                                                'pearson_corr':float(fp['pearson_corr'])}
 
     return ret_dict
+
+def get_coords_from_labelimg_xml(file_name):
+    tree = ET.parse(file_name)
+    root = tree.getroot()
+    boxes = {}
+    for obj in root.iter("object"):
+        name = obj.find('name').text
+        bndbox = obj.find('bndbox')
+        xmin = int(bndbox.find('xmin').text)
+        xmax = int(bndbox.find('xmax').text)
+        ymin = int(bndbox.find('ymin').text)
+        ymax = int(bndbox.find('ymax').text)
+        boxes[name] = ((xmin, ymin), (xmax, ymax))
+    return boxes

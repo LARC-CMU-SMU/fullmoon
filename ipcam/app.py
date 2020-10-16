@@ -28,8 +28,10 @@ formatter = logging.Formatter('%(asctime)s: %(levelname)-8s: %(threadName)-12s: 
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,cam_label,patch_label,lux_label,lux,gray_mean,gray_stddev,h_mean,s_mean,v_mean,h_stddev,s_stddev,v_stddev) " \
-                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,lux,h_mean,gray_mean,cam_label,patch_label,lux_label) " \
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+QUERY_PIXEL_LUX_CACHE_INSERT = "UPDATE pixel_lux SET timestamp = %s ,lux=%s, h_mean=%s, gray_mean=%s " \
+                               "WHERE cam_label=%s and patch_label=%s and lux_label=%s"
 QUERY_FP_SELECT = "SELECT * FROM fp"
 
 SERVICE_NAME = "IPCAM"
@@ -88,38 +90,25 @@ def write_lux_values_to_db(lux_data_and_pixel_stat_dict, camera_label, timestamp
             logger.debug("write_lux_values_to_db with cam_label [{}] patch_label [{}] when no lux value is calculated".
                          format(camera_label, patch_label))
             to_db.append((timestamp,
+                          -1,
+                          lux_data_and_pixel_stat.get('h_mean'),
+                          lux_data_and_pixel_stat.get('gray_mean'),
                           camera_label,
                           patch_label,
                           "None",
-                          -1,
-                          lux_data_and_pixel_stat.get('gray_mean'),
-                          lux_data_and_pixel_stat.get('gray_stddev'),
-                          lux_data_and_pixel_stat.get('h_mean'),
-                          lux_data_and_pixel_stat.get('s_mean'),
-                          lux_data_and_pixel_stat.get('v_mean'),
-                          lux_data_and_pixel_stat.get('h_stddev'),
-                          lux_data_and_pixel_stat.get('s_stddev'),
-                          lux_data_and_pixel_stat.get('v_stddev'),
                           ))
         else:
-            # this else is just for readability, if there is no elements in `lux_values` dict,
-            # it won't execute below code even there wasn't a else
             for lux_label, lux_val in lux_values.items():
                 to_db.append((timestamp,
+                              lux_val,
+                              lux_data_and_pixel_stat.get('h_mean'),
+                              lux_data_and_pixel_stat.get('gray_mean'),
                               camera_label,
                               patch_label,
                               lux_label,
-                              lux_val,
-                              lux_data_and_pixel_stat.get('gray_mean'),
-                              lux_data_and_pixel_stat.get('gray_stddev'),
-                              lux_data_and_pixel_stat.get('h_mean'),
-                              lux_data_and_pixel_stat.get('s_mean'),
-                              lux_data_and_pixel_stat.get('v_mean'),
-                              lux_data_and_pixel_stat.get('h_stddev'),
-                              lux_data_and_pixel_stat.get('s_stddev'),
-                              lux_data_and_pixel_stat.get('v_stddev'),
                               ))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
+    db.executemany_sql(QUERY_PIXEL_LUX_CACHE_INSERT, to_db, logger)
 
 
 def get_time_in_full_seconds():
