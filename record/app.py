@@ -102,7 +102,7 @@ def collect_dc_values():
             for pin in config.RPI_DEVICES.get(label).get('dc_pins'):
                 dc = get_dc_from_device(url, pin)
                 db.execute_sql(QUERY_DC_INSERT, (timestamp, label, pin, dc), logger)
-                db.execute_sql(QUERY_DC_CACHE_UPSERT, (timestamp, dc, label, pin), logger)
+                db.execute_sql(QUERY_DC_CACHE_UPSERT, (timestamp, label, pin, dc), logger)
         time.sleep(config.general.get("collect_dc_thread_sleep_time"))
 
 
