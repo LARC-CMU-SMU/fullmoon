@@ -30,8 +30,14 @@ logger.addHandler(handler)
 
 QUERY_PIXEL_LUX_INSERT = "INSERT INTO pixel_lux(timestamp,lux,h_mean,gray_mean,cam_label,patch_label,lux_label) " \
                          "VALUES (%s, %s, %s, %s, %s, %s, %s)"
-QUERY_PIXEL_LUX_CACHE_INSERT = "UPDATE pixel_lux SET timestamp = %s ,lux=%s, h_mean=%s, gray_mean=%s " \
-                               "WHERE cam_label=%s and patch_label=%s and lux_label=%s"
+QUERY_PIXEL_LUX_CACHE_UPSERT = "INSERT INTO pixel_lux(timestamp,lux,h_mean,gray_mean,cam_label,patch_label,lux_label) " \
+                               "VALUES (%s, %s, %s, %s, %s, %s, %s)" \
+                               "ON CONFLICT(cam_label,patch_label,lux_label)" \
+                               "DO UPDATE SET " \
+                               "timestamp = excluded.timestamp, " \
+                               "lux = excluded.lux, " \
+                               "h_mean = excluded.h_mean, " \
+                               "gray_mean = excluded.gray_mean;"
 QUERY_FP_SELECT = "SELECT * FROM fp"
 
 SERVICE_NAME = "IPCAM"
@@ -56,7 +62,7 @@ PEARSON_CORR_THRESH = 0.8
 #    }
 
 def load_finger_prints():
-    fp_dict_list = db.execute_sql_for_dict(QUERY_FP_SELECT,[],logger)
+    fp_dict_list = db.execute_sql_for_dict(QUERY_FP_SELECT, [], logger)
     num_of_finger_prints = len(fp_dict_list)
     for fp in fp_dict_list:
         cam_label = fp['cam_label']
@@ -70,9 +76,9 @@ def load_finger_prints():
             FINGER_PRINTS[cam_label][patch_label] = {}
 
         FINGER_PRINTS[cam_label][patch_label][lux_label] = {'x2': float(fp['x2']),
-                                                 'x1': float(fp['x1']),
-                                                 'x0': float(fp['x0']),
-                                                 'pearson_corr': float(fp['pearson_corr'])}
+                                                            'x1': float(fp['x1']),
+                                                            'x0': float(fp['x0']),
+                                                            'pearson_corr': float(fp['pearson_corr'])}
 
     logger.info('done loading {} finger prints'.format(num_of_finger_prints))
 
@@ -108,7 +114,7 @@ def write_lux_values_to_db(lux_data_and_pixel_stat_dict, camera_label, timestamp
                               lux_label,
                               ))
     db.executemany_sql(QUERY_PIXEL_LUX_INSERT, to_db, logger)
-    db.executemany_sql(QUERY_PIXEL_LUX_CACHE_INSERT, to_db, logger)
+    db.executemany_sql(QUERY_PIXEL_LUX_CACHE_UPSERT, to_db, logger)
 
 
 def get_time_in_full_seconds():
@@ -138,7 +144,7 @@ def get_lux_values_for_pixel_value(cam_label, patch_label, pixel_value):
             x1 = coefficient_data.get('x1')
             x0 = coefficient_data.get('x0')
 
-            calc_lux_val = (pixel_value*pixel_value*x2) + (pixel_value*x1) + x0
+            calc_lux_val = (pixel_value * pixel_value * x2) + (pixel_value * x1) + x0
             ret_dict[lux_label] = calc_lux_val
 
     return ret_dict
