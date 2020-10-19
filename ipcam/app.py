@@ -187,22 +187,21 @@ def handle_ip_cam_thread(cam_label, ip_cam_url):
         start_time = get_time_in_frac_seconds()
         vcap = cv2.VideoCapture(ip_cam_url)
         if vcap.isOpened():
-            ret = False
             try:
                 ret, frame = vcap.read()
+                if ret:
+                    timestamp = get_time_in_full_seconds()
+                    lux_values_and_pixel_stat = calculate_lux_values_from_image(cam_label, frame)
+                    write_lux_values_to_db(lux_values_and_pixel_stat, cam_label, timestamp)
+                    if config.general.get("write_image"):
+                        image_path = join(config.general.get("image_dir"), "{}_{}.jpg".format(timestamp, cam_label))
+                        logger.debug("writing image to {}".format(image_path))
+                        cv2.imwrite(image_path, frame)
+                else:
+                    logger.warn("read status false for {}".format(ip_cam_url))
+
             except Exception as e:
                 logger.error("cam reading error :{}".format(str(e)))
-
-            if ret:
-                timestamp = get_time_in_full_seconds()
-                lux_values_and_pixel_stat = calculate_lux_values_from_image(cam_label, frame)
-                write_lux_values_to_db(lux_values_and_pixel_stat, cam_label, timestamp)
-                if config.general.get("write_image"):
-                    image_path = join(config.general.get("image_dir"), "{}.jpg".format(timestamp))
-                    logger.debug("writing image to {}".format(image_path))
-                    cv2.imwrite(image_path, frame)
-            else:
-                logger.warn("read status false for {}".format(ip_cam_url))
         else:
             logger.warn("cam {} closed".format(ip_cam_url))
         time_passed = get_time_in_frac_seconds() - start_time
