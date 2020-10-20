@@ -4,6 +4,7 @@ import threading
 import time
 import requests
 from logging.handlers import TimedRotatingFileHandler
+import xml.etree.ElementTree as ET
 
 import config
 import db
@@ -43,6 +44,7 @@ DC_LOWER_BOUND = 0
 DC_UPPER_BOUND = 100 * 10000
 MIN_SAFETY_LUX = 10
 COMFORT_LUX = 20
+PATCH_COORDINATES = None
 
 
 def set_dc_in_device(url, pin, dc, freq):
@@ -89,6 +91,22 @@ def get_weight_matrix_dict():
             'c': {'a': 1.25, 'b': 0, 'c': 31.7, 'd': 10, 'e': 6.25, 'f': 4.2},
             'd': {'a': 0.4, 'b': 0.8, 'c': 8.75, 'd': 37.1, 'e': 0.4, 'f': 11.25}
             }
+
+
+# this is borrowed from util file
+def get_coords_from_labelimg_xml(file_name):
+    tree = ET.parse(file_name)
+    root = tree.getroot()
+    boxes = {}
+    for obj in root.iter("object"):
+        name = obj.find('name').text
+        bndbox = obj.find('bndbox')
+        xmin = int(bndbox.find('xmin').text)
+        xmax = int(bndbox.find('xmax').text)
+        ymin = int(bndbox.find('ymin').text)
+        ymax = int(bndbox.find('ymax').text)
+        boxes[name] = ((xmin, ymin), (xmax, ymax))
+    return boxes
 
 
 def init_weights():
@@ -200,6 +218,7 @@ def get_empty_dc_dict(light_source_keys):
 
 def get_optimized_dc_dict():
     occupancy_dict = get_current_occupancy()
+    occuapant_coordinates = get_current_occupants_coordinates()
 
     should_be_lux_dict = get_should_be_lux_vector_for_occupancy_vector(occupancy_dict)  # rounded to base 10
     logger.info("should_be_lux_dict {}".format(should_be_lux_dict))
@@ -211,7 +230,7 @@ def get_optimized_dc_dict():
     logger.info("already_added_lux_dict {}".format(already_added_lux_dict))
 
     # current_lux_dict = get_current_real_lux()  # rounded to base 10
-    current_lux_dict = get_current_pseudo_lux()  # rounded to base 10
+    current_lux_dict = get_current_pseudo_lux("b", occuapant_coordinates, PATCH_COORDINATES)  # rounded to base 10
     logger.info("current_lux_dict {}".format(current_lux_dict))
 
     natural_lux_dict = subtract_dict(current_lux_dict, already_added_lux_dict)
@@ -279,16 +298,27 @@ def get_current_pseudo_lux(cam_label, occupancy_list, patch_coordinates_dict):
     return get_rounded_values_dict(ret)
 
 
-
 def get_current_occupancy():
     # todo : optimize
     # logger.debug("querying the occupancy from db")
-    query = "SELECT occupancy FROM occupancy WHERE label=%s ORDER BY timestamp DESC LIMIT 1"
+    query = "SELECT occupancy FROM occupancy WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
     # logger.info("occupancy : a {}, b {}, c {}, d {}".format(a, b, c, d))
+    return {'a': a, 'b': b, 'c': c, 'd': d}
+
+
+def get_current_occupants_coordinates():
+    # todo : optimize
+    # logger.debug("querying the occupant coordinates from db")
+    query = "SELECT occupant_coordinates FROM occupancy WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
+    a = db.execute_sql(query, ('a',), logger, True)[0][0]
+    b = db.execute_sql(query, ('b',), logger, True)[0][0]
+    c = db.execute_sql(query, ('c',), logger, True)[0][0]
+    d = db.execute_sql(query, ('d',), logger, True)[0][0]
+    logger.info("occupant coordinates : a {}, b {}, c {}, d {}".format(a, b, c, d))
     return {'a': a, 'b': b, 'c': c, 'd': d}
 
 
@@ -342,6 +372,9 @@ def main():
     time.sleep(wait_time_for_db)
     init_weights()
     logger.info("weight_matrix_loaded")
+    # todo : ideally this should be loaded from config value
+    global PATCH_COORDINATES
+    PATCH_COORDINATES = get_coords_from_labelimg_xml("patch_coordinates/B_20201019_132337.xml")
     # todo : uncomment this
     # threading.Thread(target=handle_newly_occupied).start()
     threading.Thread(target=calculate_optimized_lux_thread).start()
