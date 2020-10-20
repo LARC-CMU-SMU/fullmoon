@@ -28,8 +28,7 @@ def execute_sql(query, values, logger, does_return_value=False):
         return res
 
 
-def execute_sql_for_dict(query, values, logger):
-    logger.debug("executing query {} with values {}".format(query, values))
+def execute_sql_for_dict(query, values):
     con = None
     ret = None
     try:
