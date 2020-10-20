@@ -3,8 +3,7 @@ from pprint import pprint
 
 from numpy import mean
 
-from scripts.m_util import get_coords_from_labelimg_xml
-from scripts.m_util import execute_sql_for_dict
+from db import execute_sql_for_dict
 
 PEARSON_CORR_THRESHOLD = .9
 PATCH_SQL = "select patch_label, h_min, h_max from fp where cam_label=%s and lux_label=%s and pearson_corr > %s"
