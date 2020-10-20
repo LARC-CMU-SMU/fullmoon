@@ -1,6 +1,7 @@
 import random
 import time
 from pprint import pprint
+import json
 
 from scripts.m_util import execute_sql_for_dict
 
@@ -36,7 +37,7 @@ def get_random_occupants(boundry, max_occupancy=2):
         x_min, x_max = sorted([random.randint(boundry["x_min"], boundry["x_max"]), random.randint(boundry["x_min"], boundry["x_max"])])
         y_min, y_max = sorted([random.randint(boundry["y_min"], boundry["y_max"]), random.randint(boundry["y_min"], boundry["y_max"])])
         ret.append({"x_min":x_min, "x_max":x_max, "y_min":y_min, "y_max":y_max})
-    return str(ret)
+    return json.dumps(ret)
 
 
 def to_db():

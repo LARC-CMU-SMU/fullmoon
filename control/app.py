@@ -302,7 +302,7 @@ def get_current_pseudo_lux(cam_label, occupancy_list, patch_coordinates_dict):
 def get_current_occupancy():
     # todo : optimize
     # logger.debug("querying the occupancy from db")
-    query = "SELECT occupancy FROM occupancy WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
+    query = "SELECT occupancy FROM occupancy_cache WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
@@ -315,19 +315,19 @@ def get_current_occupants_coordinates():
     # todo : optimize
     # logger.debug("querying the occupant coordinates from db")
     ret = []
-    query = "SELECT occupant_coordinates FROM occupancy WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
+    query = "SELECT occupant_coordinates FROM occupancy_cache WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
     if a and len(a) > 0:
-        ret.append(json.loads(a))
+        ret += (json.loads(a))
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
     if b and len(b) > 0:
-        ret.append(json.loads(b))
+        ret += (json.loads(b))
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
     if c and len(c) > 0:
-        ret.append(json.loads(c))
+        ret += (json.loads(c))
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
     if d and len(d) > 0:
-        ret.append(json.loads(d))
+        ret += (json.loads(d))
     logger.info("occupant coordinates : {}".format(ret))
     return ret
 
