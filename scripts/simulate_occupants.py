@@ -4,7 +4,10 @@ from pprint import pprint
 
 from scripts.m_util import execute_sql_for_dict
 
-SQL="""INSERT INTO occupancy(timestamp, occupancy, label, occupant_coordinates) VALUES (%s, %s, %s, %s)"""
+OCCUPANCY_SQL= """INSERT INTO occupancy(timestamp, occupancy, cam_label, cubical_label, occupant_coordinates) VALUES (%s, %s, %s, %s, %s)"""
+OCCUPANCY_CACHE_SQL = "INSERT INTO occupancy_cache(timestamp, occupancy, cam_label, cubical_label, occupant_coordinates) VALUES (%s, %s, %s, %s, %s)" \
+                        "ON CONFLICT (cam_label,cubical_label) DO UPDATE " \
+                      "SET timestamp = excluded.timestamp, occupancy = excluded.occupancy, occupant_coordinates = excluded.occupant_coordinates;"
 
 cubicles = {
     'a': {"x_min": 1139, "y_min": 240, "x_max": 1616, "y_max": 592},
@@ -12,6 +15,8 @@ cubicles = {
     'c': {"x_min": 573, "y_min": 99, "x_max": 954, "y_max": 435},
     'd': {"x_min": 123, "y_min": 297, "x_max": 572, "y_max": 637},
 }
+
+CAM_LABEL="b"
 
 
 def get_time():
@@ -48,11 +53,12 @@ def to_db():
 def insert_to_db(data):
     for values in data.values():
         print(values)
-        sql_values=[values["timestamp"], values["occupancy"], values["label"], values["occupant_coordinates"]]
-        execute_sql_for_dict(SQL,sql_values)
+        sql_values=[values["timestamp"], values["occupancy"], CAM_LABEL, values["label"], values["occupant_coordinates"]]
+        execute_sql_for_dict(OCCUPANCY_SQL, sql_values)
+        execute_sql_for_dict(OCCUPANCY_CACHE_SQL, sql_values)
 
 
 occupancy_data = to_db()
 pprint(occupancy_data)
 
-# insert_to_db(occupancy_data)
+insert_to_db(occupancy_data)
