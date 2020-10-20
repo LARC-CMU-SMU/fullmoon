@@ -313,13 +313,18 @@ def get_current_occupancy():
 def get_current_occupants_coordinates():
     # todo : optimize
     # logger.debug("querying the occupant coordinates from db")
+    ret = []
     query = "SELECT occupant_coordinates FROM occupancy WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
+    ret.append(a.values())
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
+    ret.append(b.values())
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
+    ret.append(c.values())
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    logger.info("occupant coordinates : a {}, b {}, c {}, d {}".format(a, b, c, d))
-    return {'a': a, 'b': b, 'c': c, 'd': d}
+    ret.append(d.values())
+    logger.info("occupant coordinates : {}".format(ret))
+    return ret
 
 
 def get_current_dc():
