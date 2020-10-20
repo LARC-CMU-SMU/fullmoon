@@ -97,7 +97,7 @@ def get_avg_lux_value(all_lux_values):
     return ret
 
 
-def get_current_pseudo_lux(cam_label, lux_labels, occupancy_blocks, patch_coordinates_dict):
+def m_get_current_pseudo_lux(cam_label, lux_labels, occupancy_blocks, patch_coordinates_dict):
     inter_ret = {}
     for lux_label in lux_labels:
         inter_ret[lux_label]=get_pseudo_lux_for_label(cam_label, lux_label, occupancy_blocks, patch_coordinates_dict)

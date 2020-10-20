@@ -9,6 +9,8 @@ import config
 import db
 import optimizer
 
+from control.m_lux import m_get_current_pseudo_lux
+
 logger = logging.getLogger(__name__)
 
 log_level = logging.getLevelName(config.general['log_level'])
@@ -208,7 +210,8 @@ def get_optimized_dc_dict():
     already_added_lux_dict = get_lux_already_added_by_system(WEIGHTS_DICT, current_dc_dict)  # rounded to base 10
     logger.info("already_added_lux_dict {}".format(already_added_lux_dict))
 
-    current_lux_dict = get_current_real_lux()  # rounded to base 10
+    # current_lux_dict = get_current_real_lux()  # rounded to base 10
+    current_lux_dict = get_current_pseudo_lux()  # rounded to base 10
     logger.info("current_lux_dict {}".format(current_lux_dict))
 
     natural_lux_dict = subtract_dict(current_lux_dict, already_added_lux_dict)
@@ -265,15 +268,15 @@ def get_current_real_lux():
     return get_rounded_values_dict(ret)
 
 
-# def get_current_lux(cam_label, occupancy_list, patch_coordinates_dict):
-#     ret = {}
-#     lux_sensor_labels = ["a_tsl_0", "b_tsl_3", "c_tsl_0", "d_tsl_0"]
-#     inter_ret = get_current_pseudo_lux(cam_label, lux_sensor_labels, occupancy_list, patch_coordinates_dict)
-#     ret['a']=inter_ret["a_tsl_0"]
-#     ret['b']=inter_ret["b_tsl_3"]
-#     ret['c']=inter_ret["c_tsl_0"]
-#     ret['d']=inter_ret["d_tsl_0"]
-#     return ret
+def get_current_pseudo_lux(cam_label, occupancy_list, patch_coordinates_dict):
+    ret = {}
+    lux_sensor_labels = ["a_tsl_0", "b_tsl_3", "c_tsl_0", "d_tsl_0"]
+    inter_ret = m_get_current_pseudo_lux(cam_label, lux_sensor_labels, occupancy_list, patch_coordinates_dict)
+    ret['a']=inter_ret["a_tsl_0"]
+    ret['b']=inter_ret["b_tsl_3"]
+    ret['c']=inter_ret["c_tsl_0"]
+    ret['d']=inter_ret["d_tsl_0"]
+    return get_rounded_values_dict(ret)
 
 
 
