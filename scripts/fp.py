@@ -44,10 +44,10 @@ def get_shifted_sensor_tag_time_line(m_ts_list, delta):
 
 
 # rearrange the data to make it easier to calculate correlation
-processed_lux = process_wired_lux_dict(lux_data)
+processed_lux = get_processed_lux_dict(lux_data)
 # processed_lux2 = process_wired_lux_dict(lux_data2)
 
-processed_pixel = process_pixel_lux_dict(pixel_data)
+processed_pixel = get_processed_gray_dict_and_hue_dict(pixel_data)
 # processed_pixel2 = process_pixel_lux_dict(pixel_data2)
 # processed_st_lux = process_sensor_tag_lux_dict(st_lux_data)
 

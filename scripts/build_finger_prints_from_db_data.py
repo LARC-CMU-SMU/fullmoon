@@ -8,17 +8,17 @@ import plotly.graph_objects as go
 # result will be written to OUT_CSV
 # resulting csv file can be imported to DB(fp table) directly
 
-CSV_DIR = "/Users/kasun/working_data/smartlight/sep30/"
+CSV_DIR = "/Users/kasun/working_data/smartlight/oct19/"
 OUT_CSV = '{}correlation.csv'.format(CSV_DIR)
 CAM_LABEL = 'b'
 
-START_TS = 1601474553
-END_TS = 1601482490
+START_TS = 1603113615
+END_TS = 1603121552
 
 # for the h range, only consider the data points where v channel value is above this threshold.
 # because once the v channel value drops after certain value h value doesn't stay constant.
 # (this is the reason why every cat is gray in the dark)
-V_CHANNEL_THRESHOLD = 20
+LUX_THRESHOLD_FOR_HUE_RANGE_CALCULATION = 9
 
 LUX_QUERY = "SELECT * FROM lux WHERE timestamp > %s and timestamp < %s ORDER BY timestamp"
 PIXEL_QUERY = "SELECT * FROM pixel_lux WHERE cam_label=%s and timestamp > %s and timestamp < %s ORDER BY timestamp"
@@ -89,37 +89,60 @@ pixel_data = get_pixel_from_db()
 
 # rearrange the data to make it easier to calculate correlation
 print("processing lux data")
-processed_lux = process_wired_lux_dict(lux_data)
+processed_lux = get_processed_lux_dict(lux_data)
 print("processing pixel data")
-processed_pixel = process_pixel_lux_dict(pixel_data)
+processed_gray_pixel, processed_hue_pixel = get_processed_gray_dict_and_hue_dict(pixel_data)
 
-hsv_ranges = get_hsv_ranges(pixel_data)
+# hsv_ranges = get_hsv_ranges(pixel_data)
 
 to_csv_dict_list = []
 
+
+def get_filtered_hue_value_list(lux_dict, hue_dict, lux_thresh = 9):
+    lux_ts_list = lux_dict.keys()
+    sorted(lux_ts_list)
+    # m_lux_list = []
+    m_pixel_list = []
+    # ret_ts_list = []
+    for ts in lux_ts_list:
+        lux_val = lux_dict.get(ts)
+        if lux_val > lux_thresh:  # filter out hue values with low lux values
+            pixel_val = hue_dict.get(ts)
+            if pixel_val is not None:
+                # m_lux_list.append(lux_val)
+                # print(lux_val, pixel_val)
+                m_pixel_list.append(pixel_val)
+                # ret_ts_list.append(ts)
+    return m_pixel_list
+
+
 print("calculating finger prints")
-for pixel_label in processed_pixel.keys():  # iterate over the patches
+for pixel_label in processed_gray_pixel.keys():  # iterate over the patches
     for lux_label in processed_lux.keys():  # iterate over the lux sensors
         # we are building coefficients for all the patch, lux sensor combinations
-        current_pixel_dict = processed_pixel[pixel_label]
+        current_gray_pixel_dict = processed_gray_pixel[pixel_label]
         current_lux_dict = processed_lux[lux_label]
+        current_hue_pixel_dict = processed_hue_pixel[pixel_label]
+
 
         # smooth the pixel and lux tuples to a same time points
-        ts_list, lux_list, pixel_list = get_synced_pixel_lux_lists(current_pixel_dict, current_lux_dict)
+        ts_list, lux_list, pixel_gray_list = get_synced_pixel_lux_lists(current_lux_dict, current_gray_pixel_dict)
+        hue_list = get_filtered_hue_value_list(current_lux_dict, current_hue_pixel_dict)
+
 
         lux_list = np.asarray(lux_list)
-        pixel_list = np.asarray(pixel_list)
+        pixel_gray_list = np.asarray(pixel_gray_list)
         if len(ts_list) > 0:
             # finally after all the courting ...
-            fit = np.polyfit(pixel_list,lux_list, 2)
-            corr = get_pearson_correlation_coefficient(pixel_list, lux_list)
-            hsv_values = hsv_ranges.get(pixel_label)
-            h_min= hsv_values.get('h_min')
-            h_max= hsv_values.get('h_max')
-            s_min= hsv_values.get('s_min')
-            s_max= hsv_values.get('s_max')
-            v_min= hsv_values.get('v_min')
-            v_max= hsv_values.get('v_max')
+            fit = np.polyfit(pixel_gray_list, lux_list, 2)
+            corr = get_pearson_correlation_coefficient(pixel_gray_list, lux_list)
+            # hsv_values = hsv_ranges.get(pixel_label)
+            h_min, h_max = get_min_and_max(hue_list)
+            # h_max= hsv_values.get('h_max')
+            # s_min= hsv_values.get('s_min')
+            # s_max= hsv_values.get('s_max')
+            # v_min= hsv_values.get('v_min')
+            # v_max= hsv_values.get('v_max')
             current_dict = {
                 'cam_label':CAM_LABEL,
                 'patch_label': pixel_label,
@@ -131,12 +154,9 @@ for pixel_label in processed_pixel.keys():  # iterate over the patches
                 'x0': fit[2],
                 'h_min':h_min,
                 'h_max':h_max,
-                's_min':s_min,
-                's_max':s_max,
-                'v_min':v_min,
-                'v_max':v_max
             }
-            to_csv_dict_list.append(current_dict)
+            if corr > .9:
+                to_csv_dict_list.append(current_dict)
         else:
             print("not enough data points {},{}".format(pixel_label, lux_label))
 

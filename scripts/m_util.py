@@ -8,7 +8,7 @@ def align_ts(m_ts_list, delta=5):
     return [delta * round(x / delta) for x in m_ts_list]
 
 
-def process_wired_lux_dict(lux_dict):
+def get_processed_lux_dict(lux_dict):
     inter_dict = {}
     # smooth the timestamps
     lux_dict['aligned_ts']=align_ts(lux_dict['timestamp'])
@@ -30,7 +30,7 @@ def process_wired_lux_dict(lux_dict):
     return ret_dict
 
 
-def process_pixel_lux_dict(pixel_lux_dict):
+def get_processed_gray_dict_and_hue_dict(pixel_lux_dict):
     inter_dict = {}
     # smooth the timestamps
     pixel_lux_dict['aligned_ts']=align_ts(pixel_lux_dict['timestamp'])
@@ -38,18 +38,23 @@ def process_pixel_lux_dict(pixel_lux_dict):
         ts = pixel_lux_dict['aligned_ts'][i]
         m_pixel_label = pixel_lux_dict['patch_label'][i]
         cam_label = pixel_lux_dict['cam_label'][i]
-        pixel = pixel_lux_dict['pixel'][i]
+        gray = pixel_lux_dict['pixel'][i]
+        hue = pixel_lux_dict['h_mean'][i]
         # composite_label = "{}_{}".format(cam_label, m_pixel_label)
         if m_pixel_label not in inter_dict:
             inter_dict[m_pixel_label] = []
-        inter_dict[m_pixel_label].append((ts, pixel))
-    ret_dict = {}
+        inter_dict[m_pixel_label].append((ts, gray, hue))
+    ret_dict_gray = {}
+    ret_dict_hue = {}
     for k, v in inter_dict.items():
-        label_dict = {}
-        for tup in v:
-            label_dict[tup[0]] = float(tup[1])
-        ret_dict[k] = label_dict
-    return ret_dict
+        label_dict_gray = {}
+        label_dict_hue = {}
+        for ts, gray, hue in v:
+            label_dict_gray[ts] = float(gray)
+            label_dict_hue[ts] = float(hue)
+        ret_dict_gray[k] = label_dict_gray
+        ret_dict_hue[k] = label_dict_hue
+    return ret_dict_gray, ret_dict_hue
 
 
 def process_sensor_tag_lux_dict(st_lux_dict):
@@ -89,7 +94,7 @@ def process_pixel_dict(pixel_dict):
     return ret_dict
 
 
-def get_synced_pixel_lux_lists(pixel_label_dict, lux_label_dict):
+def get_synced_pixel_lux_lists(lux_label_dict, pixel_label_dict):
     lux_ts_list = lux_label_dict.keys()
     sorted(lux_ts_list)
     m_lux_list = []
