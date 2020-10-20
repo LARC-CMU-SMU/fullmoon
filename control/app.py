@@ -9,7 +9,7 @@ import config
 import db
 import optimizer
 
-from control.m_lux import m_get_current_pseudo_lux
+from m_lux import m_get_current_pseudo_lux
 
 logger = logging.getLogger(__name__)
 
