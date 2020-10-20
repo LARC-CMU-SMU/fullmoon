@@ -1,3 +1,4 @@
+import json
 import logging
 import sys
 import threading
@@ -316,13 +317,17 @@ def get_current_occupants_coordinates():
     ret = []
     query = "SELECT occupant_coordinates FROM occupancy WHERE cubical_label=%s ORDER BY timestamp DESC LIMIT 1"
     a = db.execute_sql(query, ('a',), logger, True)[0][0]
-    ret.append(a.values())
+    if a and len(a) > 0:
+        ret.append(json.loads(a))
     b = db.execute_sql(query, ('b',), logger, True)[0][0]
-    ret.append(b.values())
+    if b and len(b) > 0:
+        ret.append(json.loads(b))
     c = db.execute_sql(query, ('c',), logger, True)[0][0]
-    ret.append(c.values())
+    if c and len(c) > 0:
+        ret.append(json.loads(c))
     d = db.execute_sql(query, ('d',), logger, True)[0][0]
-    ret.append(d.values())
+    if d and len(d) > 0:
+        ret.append(json.loads(d))
     logger.info("occupant coordinates : {}".format(ret))
     return ret
 
