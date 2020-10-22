@@ -31,6 +31,7 @@ interact with teapot server and records data
         3. sleep for SLEEP_TIME(configurable constant)
         
 ## DB Schema
+```sql
 create table if not exists lux
 (
 	timestamp integer not null,
@@ -139,6 +140,6 @@ create table if not exists occupancy_cache
 );
 
 alter table occupancy_cache owner to fullmoon;
-
+```
 
 
