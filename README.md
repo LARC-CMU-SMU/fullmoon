@@ -32,7 +32,6 @@ interact with teapot server and records data
         
 ## DB Schema
 ```sql
--- real lux
 create table if not exists lux
 (
 	timestamp integer not null,
@@ -41,12 +40,13 @@ create table if not exists lux
 	pin text not null
 );
 
+comment on table lux is 'real lux';
+
 alter table lux owner to fullmoon;
 
 create index if not exists lux_timestamp
 	on lux (timestamp);
 
--- dc values
 create table if not exists dc
 (
 	timestamp integer not null,
@@ -55,12 +55,13 @@ create table if not exists dc
 	pin integer not null
 );
 
+comment on table dc is 'dc values';
+
 alter table dc owner to fullmoon;
 
 create index if not exists dc_timestamp
 	on dc (timestamp);
 
--- occupancy
 create table if not exists occupancy
 (
 	timestamp integer not null,
@@ -70,9 +71,10 @@ create table if not exists occupancy
 	cam_label text
 );
 
+comment on table occupancy is 'occupancy';
+
 alter table occupancy owner to fullmoon;
 
--- psuedo lux
 create table if not exists pixel_lux
 (
 	timestamp integer not null,
@@ -84,12 +86,13 @@ create table if not exists pixel_lux
 	h_mean real not null
 );
 
+comment on table pixel_lux is 'psuedo lux';
+
 alter table pixel_lux owner to fullmoon;
 
 create index if not exists pixel_lux_timestamp
 	on pixel_lux (timestamp);
 
--- finger print data
 create table if not exists fp
 (
 	cam_label text,
@@ -104,9 +107,10 @@ create table if not exists fp
 	h_max numeric
 );
 
+comment on table fp is 'finger print data';
+
 alter table fp owner to fullmoon;
 
--- cache table for latest dc values
 create table if not exists dc_cache
 (
 	timestamp integer not null,
@@ -117,9 +121,10 @@ create table if not exists dc_cache
 		unique (label, pin)
 );
 
+comment on table dc_cache is 'cache table for latest dc values';
+
 alter table dc_cache owner to fullmoon;
 
--- cache table for latest psuedo lux values
 create table if not exists pixel_lux_cache
 (
 	timestamp integer not null,
@@ -128,14 +133,15 @@ create table if not exists pixel_lux_cache
 	lux_label text not null,
 	lux real not null,
 	h_mean real not null,
-	gray_mean real not null,
+	gray_mean real,
 	constraint pixel_lux_cache_pk
-		primary key (cam_label, patch_label, lux_label)
+		unique (cam_label, patch_label, lux_label)
 );
+
+comment on table pixel_lux_cache is 'cache table for latest psuedo lux values';
 
 alter table pixel_lux_cache owner to fullmoon;
 
--- cache table for latest occupancy values
 create table if not exists occupancy_cache
 (
 	timestamp integer not null,
@@ -147,7 +153,11 @@ create table if not exists occupancy_cache
 		unique (cam_label, cubical_label)
 );
 
+comment on table occupancy_cache is 'cache table for latest occupancy values';
+
 alter table occupancy_cache owner to fullmoon;
+
+
 ```
 
 
