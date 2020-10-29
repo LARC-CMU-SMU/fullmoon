@@ -1,17 +1,24 @@
 # fullmoon
-interact with teapot server and records data
+interact with teapot server and,
+* records lux, dc, pixel values
+* derive psuedo lux from pixel values
+* decide the optimal lux values
+* control the dc values
+* calculate the optimal dc values
+
 
 ## Getting started
 1. install docker and docker-compose
 2. clone this repository
-3. run the init.sh to create the docker_mount dir
-4. update the config.py as necessary
-4. run docker-compose.yaml
+3. run the _init.sh_ to create the _docker_mount_ dir structure
+4. update the _config.py_ files in each service as necessary
+5. update the _patch_coordinates_ files(within ipcam and control) if nessecary
+5. run `docker-compose up --build`
 
 ## services
-* calculate_lux - periodically calcualte psuedo lux values using the camera feed and store them in db
-* record - periodically collect and stores(in db) dc values and real lux values from rpi devices (which in turn runs teapot servers)
-* control - change the led brightness as required
+* ipcam - periodically calcualte psuedo lux values using the pixel values from ip camera feed (and store them in db)
+* record - periodically collect and stores(in db) dc values and real lux values from rpi devices (which runs teapot servers)
+* control - calculate the optimal lux -> optimal dc values and change the dc values as required
     1. infinite loop (handle_newly_occupied thread) **this is stopped for now**
         1. get the OCCUPANCY_VECTOR (Boolean) for all sections
         2. if occupancy made the transform false -> true: set that section’s corresponding light to COMFORT_VALUE (because we don’t want to keep people in dark while we incrementally increase the light)
@@ -19,13 +26,15 @@ interact with teapot server and records data
     2. infinite loop (calculate_optimized_dc_thread)
         1. get the OCCUPANCY_VECTOR (Boolean) for all sections
         2. define the OPTIMUM_LUX vector based on occupancy [eg : occupancy vector = (True, False, False, True) -> OPTIMUM_LUX = (COMFORT_VALUE, MINIMUM_VALUE, MINIMUM_VALUE, COMFORT_VALUE)]
-        3. get the CURRENT_LUX vector (using pixel values)
-        4. calculate the DEFICIT_LUX vector (DEFICIT_LUX = OPTIMUM_LUX - CURRENT_LUX)
-        5. calculate the optimum dc levels vector(TARGET_DC) for each section using the DEFICIT_LUX and WEIGHT_MATRIX
-        6. update the TARGET_DC
-        7. sleep for SLEEP_TIME(configurable constant)
+        3. get the ALREADY_ADDED_LUX vector (using current dc values)
+	4. get the CURRENT_LUX vector (from the pixel values)
+	5. calculate the CURRENT_NATURAL_LUX = CURRENT_LUX - ALREADY_ADDED_LUX
+        5. calculate the DEFICIT_LUX vector (DEFICIT_LUX = OPTIMUM_LUX - CURRENT_NATURAL_LUX)
+        6. calculate the optimum dc levels vector(TARGET_DC) for each section using the DEFICIT_LUX and WEIGHT_MATRIX
+        7. update the TARGET_DC
+        8. sleep for SLEEP_TIME(configurable constant)
     3. infinite loop (set_optimized_dc_in_device thread)
-        1. read the TARGET_DC from db
+        1. read the TARGET_DC
         2. for each section 
             1. if abs(TARGET_DC - current dc) > THRESHOLD_DC: set the TARGET_DC
         3. sleep for SLEEP_TIME(configurable constant)
