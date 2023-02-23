@@ -10,8 +10,10 @@ PEARSON_CORR_THRESHOLD = .9
 PATCH_SQL = "select patch_label, h_min, h_max from fp where cam_label=%s and lux_label=%s and pearson_corr > %s"
 PIXEL_ANALYTICS_SQL = "select lux, h_mean from pixel_lux where cam_label=%s and lux_label=%s and patch_label > %s order by timestamp DESC LIMIT 1"
 
-OCCUPANCY_LIST = [{'x_min': 672, 'x_max': 704, 'y_min': 133, 'y_max': 292}, {'x_min': 589, 'x_max': 951, 'y_min': 243, 'y_max': 301}]
-PATCH_COORDINATES = get_coords_from_labelimg_xml("/Users/kasun/projects/fullmoon/ipcam/patch_coordinates/1598961600b.xml")
+# OCCUPANCY_LIST = [{'x_min': 672, 'x_max': 704, 'y_min': 133, 'y_max': 292}, {'x_min': 589, 'x_max': 951, 'y_min': 243, 'y_max': 301}]
+OCCUPANCY_LIST = []
+
+PATCH_COORDINATES = get_coords_from_labelimg_xml("/Users/kasun/projects/fullmoon/control/patch_coordinates/B_20201019_132337.xml")
 
 
 def get_above_threshold_patches_for_label(cam_label, lux_label):
@@ -105,5 +107,5 @@ def get_current_pseudo_lux(cam_label, lux_labels, occupancy_blocks, patch_coordi
     return ret
 
 
-current_pseudo_lux = get_current_pseudo_lux('b', ['a_tsl_0', 'b_tsl_3', 'c_tsl_0', 'd_tsl_0'], OCCUPANCY_LIST, PATCH_COORDINATES)
+current_pseudo_lux = get_current_pseudo_lux('b', ['a_tsl_0', 'b_tsl_3', 'c_tsl_1', 'd_tsl_0'], OCCUPANCY_LIST, PATCH_COORDINATES)
 pprint(current_pseudo_lux)
